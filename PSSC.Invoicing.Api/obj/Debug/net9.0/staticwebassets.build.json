@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "uRY/3aqra+YG3D8Zz7Nx9D4wfSpu15J3eb76XBFTO7Y=",
+  "Source": "PSSC.Invoicing.Api",
+  "BasePath": "_content/PSSC.Invoicing.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

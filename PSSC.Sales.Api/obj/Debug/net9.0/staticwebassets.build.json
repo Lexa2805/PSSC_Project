@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "uLeju5JA0qmnhfWTSQge4fmjTkzrLOEyP8+ZEuetERI=",
+  "Source": "PSSC.Sales.Api",
+  "BasePath": "_content/PSSC.Sales.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

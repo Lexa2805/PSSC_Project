@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "vCSGnrBEWjBnQbD9Ul5Zmx38FKflL4/9nlbuztlcnFg=",
+  "Source": "PSSC.Shipping.Api",
+  "BasePath": "_content/PSSC.Shipping.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

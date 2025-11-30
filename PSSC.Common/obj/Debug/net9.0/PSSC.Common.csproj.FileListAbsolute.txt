@@ -1,0 +1,12 @@
+D:\PSSC_Project\PSSC.Common\bin\Debug\net9.0\PSSC.Common.deps.json
+D:\PSSC_Project\PSSC.Common\bin\Debug\net9.0\PSSC.Common.dll
+D:\PSSC_Project\PSSC.Common\bin\Debug\net9.0\PSSC.Common.pdb
+D:\PSSC_Project\PSSC.Common\obj\Debug\net9.0\PSSC.Common.csproj.AssemblyReference.cache
+D:\PSSC_Project\PSSC.Common\obj\Debug\net9.0\PSSC.Common.GeneratedMSBuildEditorConfig.editorconfig
+D:\PSSC_Project\PSSC.Common\obj\Debug\net9.0\PSSC.Common.AssemblyInfoInputs.cache
+D:\PSSC_Project\PSSC.Common\obj\Debug\net9.0\PSSC.Common.AssemblyInfo.cs
+D:\PSSC_Project\PSSC.Common\obj\Debug\net9.0\PSSC.Common.csproj.CoreCompileInputs.cache
+D:\PSSC_Project\PSSC.Common\obj\Debug\net9.0\PSSC.Common.dll
+D:\PSSC_Project\PSSC.Common\obj\Debug\net9.0\refint\PSSC.Common.dll
+D:\PSSC_Project\PSSC.Common\obj\Debug\net9.0\PSSC.Common.pdb
+D:\PSSC_Project\PSSC.Common\obj\Debug\net9.0\ref\PSSC.Common.dll
