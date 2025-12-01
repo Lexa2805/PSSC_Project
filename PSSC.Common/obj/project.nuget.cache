@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "9+5SgkMmrws=",
+  "dgSpecHash": "l8FRUVCVwDs=",
   "success": true,
-  "projectFilePath": "d:\\PSSC_Project\\PSSC.Common\\PSSC.Common.csproj",
+  "projectFilePath": "D:\\PSSC_Project\\PSSC.Common\\PSSC.Common.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Lexa\\.nuget\\packages\\azure.core\\1.50.0\\azure.core.1.50.0.nupkg.sha512",
     "C:\\Users\\Lexa\\.nuget\\packages\\azure.core.amqp\\1.3.1\\azure.core.amqp.1.3.1.nupkg.sha512",

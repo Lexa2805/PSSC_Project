@@ -10,3 +10,4 @@ D:\PSSC_Project\PSSC.Common\obj\Debug\net9.0\PSSC.Common.dll
 D:\PSSC_Project\PSSC.Common\obj\Debug\net9.0\refint\PSSC.Common.dll
 D:\PSSC_Project\PSSC.Common\obj\Debug\net9.0\PSSC.Common.pdb
 D:\PSSC_Project\PSSC.Common\obj\Debug\net9.0\ref\PSSC.Common.dll
+d:\PSSC_Project\PSSC.Common\obj\Debug\net9.0\PSSC.Common.sourcelink.json

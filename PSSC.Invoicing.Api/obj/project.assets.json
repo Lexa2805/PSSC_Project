@@ -3196,11 +3196,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "d:\\PSSC_Project\\PSSC.Invoicing.Api\\PSSC.Invoicing.Api.csproj",
+      "projectUniqueName": "D:\\PSSC_Project\\PSSC.Invoicing.Api\\PSSC.Invoicing.Api.csproj",
       "projectName": "PSSC.Invoicing.Api",
-      "projectPath": "d:\\PSSC_Project\\PSSC.Invoicing.Api\\PSSC.Invoicing.Api.csproj",
+      "projectPath": "D:\\PSSC_Project\\PSSC.Invoicing.Api\\PSSC.Invoicing.Api.csproj",
       "packagesPath": "C:\\Users\\Lexa\\.nuget\\packages\\",
-      "outputPath": "d:\\PSSC_Project\\PSSC.Invoicing.Api\\obj\\",
+      "outputPath": "D:\\PSSC_Project\\PSSC.Invoicing.Api\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -3221,8 +3221,8 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "d:\\PSSC_Project\\PSSC.Common\\PSSC.Common.csproj": {
-              "projectPath": "d:\\PSSC_Project\\PSSC.Common\\PSSC.Common.csproj"
+            "D:\\PSSC_Project\\PSSC.Common\\PSSC.Common.csproj": {
+              "projectPath": "D:\\PSSC_Project\\PSSC.Common\\PSSC.Common.csproj"
             }
           }
         }

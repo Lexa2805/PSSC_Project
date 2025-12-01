@@ -1,6 +1,77 @@
-@PSSC.Sales.Api_HostAddress = http://localhost:5122
+@baseUrl = http://localhost:5122
 
-GET {{PSSC.Sales.Api_HostAddress}}/weatherforecast/
+### Health Check
+GET {{baseUrl}}/health
 Accept: application/json
 
-###
+### Get All Products
+GET {{baseUrl}}/api/products
+Accept: application/json
+
+### Place Order
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "customer-001",
+  "lines": [
+    {
+      "productCode": "BOOK-001",
+      "quantity": 2
+    },
+    {
+      "productCode": "BOOK-002",
+      "quantity": 1
+    }
+  ]
+}
+
+### Get Order by ID (replace with actual order ID)
+GET {{baseUrl}}/api/orders/a426f1b8-0379-43e5-a53e-effa1e55fd2f
+Accept: application/json
+
+### Get Customer Orders
+GET {{baseUrl}}/api/customers/customer-001/orders
+Accept: application/json
+
+### Place Order - Invalid Product (should fail)
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "customer-002",
+  "lines": [
+    {
+      "productCode": "INVALID-BOOK",
+      "quantity": 1
+    }
+  ]
+}
+
+### Place Order - Invalid Quantity (should fail)
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "customer-003",
+  "lines": [
+    {
+      "productCode": "BOOK-001",
+      "quantity": -5
+    }
+  ]
+}
+
+### Place Order - Insufficient Stock (should fail)
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "customer-004",
+  "lines": [
+    {
+      "productCode": "BOOK-005",
+      "quantity": 1000
+    }
+  ]
+}
