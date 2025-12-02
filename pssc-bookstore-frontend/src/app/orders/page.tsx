@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getCustomerOrders, getInvoiceByOrderId } from "@/lib/api";
-import { Order, InvoiceDto } from "@/types";
+import { getCustomerOrders, getInvoiceByOrderId, getShipmentByOrderId } from "@/lib/api";
+import { Order, InvoiceDto, ShipmentResponse } from "@/types";
 
 export default function OrdersPage() {
     const [customerId, setCustomerId] = useState("");
     const [orders, setOrders] = useState<Order[]>([]);
     const [invoices, setInvoices] = useState<Record<string, InvoiceDto | null>>({});
+    const [shipments, setShipments] = useState<Record<string, ShipmentResponse | null>>({});
     const [loading, setLoading] = useState(false);
     const [searched, setSearched] = useState(false);
     const [expandedInvoice, setExpandedInvoice] = useState<string | null>(null);
+    const [expandedShipment, setExpandedShipment] = useState<string | null>(null);
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -19,7 +21,9 @@ export default function OrdersPage() {
         setLoading(true);
         setSearched(true);
         setInvoices({});
+        setShipments({});
         setExpandedInvoice(null);
+        setExpandedShipment(null);
         try {
             const data = await getCustomerOrders(customerId);
             setOrders(data);
@@ -31,25 +35,44 @@ export default function OrdersPage() {
         }
     };
 
-    // Fetch invoices for all orders after orders are loaded
+    // Fetch invoices and shipments for all orders after orders are loaded
     useEffect(() => {
-        const fetchInvoices = async () => {
+        const fetchOrderDetails = async () => {
             if (orders.length === 0) return;
             
+            // Fetch invoices
             const invoicePromises = orders.map(async (order) => {
-                const invoice = await getInvoiceByOrderId(order.id);
-                return { orderId: order.id, invoice };
+                const id = order.id || order.orderId;
+                const invoice = await getInvoiceByOrderId(id);
+                return { orderId: id, invoice };
             });
 
-            const results = await Promise.all(invoicePromises);
+            // Fetch shipments
+            const shipmentPromises = orders.map(async (order) => {
+                const id = order.id || order.orderId;
+                const shipment = await getShipmentByOrderId(id);
+                return { orderId: id, shipment };
+            });
+
+            const [invoiceResults, shipmentResults] = await Promise.all([
+                Promise.all(invoicePromises),
+                Promise.all(shipmentPromises)
+            ]);
+
             const invoiceMap: Record<string, InvoiceDto | null> = {};
-            results.forEach(({ orderId, invoice }) => {
+            invoiceResults.forEach(({ orderId, invoice }) => {
                 invoiceMap[orderId] = invoice;
             });
             setInvoices(invoiceMap);
+
+            const shipmentMap: Record<string, ShipmentResponse | null> = {};
+            shipmentResults.forEach(({ orderId, shipment }) => {
+                shipmentMap[orderId] = shipment;
+            });
+            setShipments(shipmentMap);
         };
 
-        fetchInvoices();
+        fetchOrderDetails();
     }, [orders]);
 
     const getStatusColor = (status: string) => {
@@ -83,6 +106,10 @@ export default function OrdersPage() {
         setExpandedInvoice(expandedInvoice === orderId ? null : orderId);
     };
 
+    const toggleShipment = (orderId: string) => {
+        setExpandedShipment(expandedShipment === orderId ? null : orderId);
+    };
+
     return (
         <div className="min-h-screen bg-[#fdf5f7] dark:bg-gray-900 transition-colors duration-300">
             {/* Header */}
@@ -98,13 +125,29 @@ export default function OrdersPage() {
             </div>
 
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                {/* Help Info */}
+                <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
+                    <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div className="text-sm">
+                            <p className="font-medium text-blue-800 dark:text-blue-300">Unde găsesc ID-ul de client?</p>
+                            <p className="text-blue-600 dark:text-blue-400 mt-1">
+                                ID-ul de client este afișat în ecranul de confirmare după plasarea unei comenzi. 
+                                Are formatul: <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">customer-web-1234567890</code>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Search Form */}
                 <form onSubmit={handleSearch} className="mb-12">
                     <div className="flex gap-4">
                         <div className="relative flex-1">
                             <input
                                 type="text"
-                                placeholder="Introdu ID-ul de Client..."
+                                placeholder="ex: customer-web-1733140512000"
                                 value={customerId}
                                 onChange={(e) => setCustomerId(e.target.value)}
                                 className="w-full px-6 py-4 pl-12 rounded-2xl border border-[#f8d7e0] dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#f3c9d5] dark:focus:ring-gray-500 focus:border-transparent text-lg"
@@ -193,9 +236,11 @@ export default function OrdersPage() {
                     </div>
                 ) : orders.length > 0 ? (
                     <div className="space-y-6">
-                        {orders.map((order) => (
+                        {orders.map((order) => {
+                            const orderId = order.id || order.orderId;
+                            return (
                             <div
-                                key={order.id}
+                                key={orderId}
                                 className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
                             >
                                 {/* Order Header */}
@@ -204,15 +249,15 @@ export default function OrdersPage() {
                                         <div>
                                             <span className="text-sm text-gray-500 dark:text-gray-400">ID Comandă</span>
                                             <p className="font-mono font-semibold text-gray-900 dark:text-white">
-                                                #{order.id.slice(0, 8).toUpperCase()}
+                                                #{(orderId || '').slice(0, 8).toUpperCase()}
                                             </p>
                                         </div>
                                         <span
                                             className={`px-4 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                                                order.status
+                                                order.status || 'placed'
                                             )}`}
                                         >
-                                            {order.status}
+                                            {order.status || 'Placed'}
                                         </span>
                                     </div>
                                 </div>
@@ -268,12 +313,12 @@ export default function OrdersPage() {
                                     </div>
 
                                     {/* Invoice Section */}
-                                    {invoices[order.id] !== undefined && (
+                                    {invoices[orderId] !== undefined && (
                                         <div className="mt-4 pt-4 border-t border-[#f8d7e0] dark:border-gray-700">
-                                            {invoices[order.id] ? (
+                                            {invoices[orderId] ? (
                                                 <div>
                                                     <button
-                                                        onClick={() => toggleInvoice(order.id)}
+                                                        onClick={() => toggleInvoice(orderId)}
                                                         className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#fce4ec] to-[#f8d7e0] dark:from-gray-700 dark:to-gray-600 rounded-xl hover:from-[#f8d7e0] hover:to-[#f3c9d5] dark:hover:from-gray-600 dark:hover:to-gray-500 transition-all"
                                                     >
                                                         <div className="flex items-center gap-3">
@@ -291,12 +336,12 @@ export default function OrdersPage() {
                                                                 />
                                                             </svg>
                                                             <span className="font-semibold text-gray-800 dark:text-white">
-                                                                Factură: {invoices[order.id]!.invoiceNumber}
+                                                                Factură: {invoices[orderId]!.invoiceNumber}
                                                             </span>
                                                         </div>
                                                         <svg
                                                             className={`w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform ${
-                                                                expandedInvoice === order.id ? "rotate-180" : ""
+                                                                expandedInvoice === orderId ? "rotate-180" : ""
                                                             }`}
                                                             fill="none"
                                                             viewBox="0 0 24 24"
@@ -312,39 +357,39 @@ export default function OrdersPage() {
                                                     </button>
 
                                                     {/* Expanded Invoice Details */}
-                                                    {expandedInvoice === order.id && (
+                                                    {expandedInvoice === orderId && (
                                                         <div className="mt-4 p-4 bg-white dark:bg-gray-800 border border-[#f3c9d5] dark:border-gray-600 rounded-xl">
                                                             <div className="grid grid-cols-2 gap-4 mb-4">
                                                                 <div>
                                                                     <p className="text-sm text-gray-500 dark:text-gray-400">Client</p>
                                                                     <p className="font-medium text-gray-900 dark:text-white">
-                                                                        {invoices[order.id]!.clientName}
+                                                                        {invoices[orderId]!.clientName}
                                                                     </p>
                                                                 </div>
                                                                 <div>
                                                                     <p className="text-sm text-gray-500 dark:text-gray-400">Tip</p>
                                                                     <p className="font-medium text-gray-900 dark:text-white">
-                                                                        {invoices[order.id]!.isCompany ? "Persoană Juridică" : "Persoană Fizică"}
+                                                                        {invoices[orderId]!.isCompany ? "Persoană Juridică" : "Persoană Fizică"}
                                                                     </p>
                                                                 </div>
-                                                                {invoices[order.id]!.fiscalCode && (
+                                                                {invoices[orderId]!.fiscalCode && (
                                                                     <div>
                                                                         <p className="text-sm text-gray-500 dark:text-gray-400">CUI</p>
                                                                         <p className="font-medium text-gray-900 dark:text-white">
-                                                                            {invoices[order.id]!.fiscalCode}
+                                                                            {invoices[orderId]!.fiscalCode}
                                                                         </p>
                                                                     </div>
                                                                 )}
                                                                 <div>
                                                                     <p className="text-sm text-gray-500 dark:text-gray-400">Data Emiterii</p>
                                                                     <p className="font-medium text-gray-900 dark:text-white">
-                                                                        {formatDate(invoices[order.id]!.issuedAt)}
+                                                                        {formatDate(invoices[orderId]!.issuedAt)}
                                                                     </p>
                                                                 </div>
                                                                 <div className="col-span-2">
                                                                     <p className="text-sm text-gray-500 dark:text-gray-400">Adresa de Facturare</p>
                                                                     <p className="font-medium text-gray-900 dark:text-white">
-                                                                        {invoices[order.id]!.billingAddress}
+                                                                        {invoices[orderId]!.billingAddress}
                                                                     </p>
                                                                 </div>
                                                             </div>
@@ -354,32 +399,32 @@ export default function OrdersPage() {
                                                                 <div className="flex justify-between text-sm">
                                                                     <span className="text-gray-600 dark:text-gray-400">Subtotal (fără TVA)</span>
                                                                     <span className="text-gray-900 dark:text-white">
-                                                                        {invoices[order.id]!.netAmount.toFixed(2)} {invoices[order.id]!.currency}
+                                                                        {invoices[orderId]!.netAmount.toFixed(2)} {invoices[orderId]!.currency}
                                                                     </span>
                                                                 </div>
                                                                 <div className="flex justify-between text-sm">
                                                                     <span className="text-gray-600 dark:text-gray-400">
-                                                                        TVA ({(invoices[order.id]!.vatRate * 100).toFixed(0)}%)
+                                                                        TVA ({(invoices[orderId]!.vatRate * 100).toFixed(0)}%)
                                                                     </span>
                                                                     <span className="text-gray-900 dark:text-white">
-                                                                        {invoices[order.id]!.vatAmount.toFixed(2)} {invoices[order.id]!.currency}
+                                                                        {invoices[orderId]!.vatAmount.toFixed(2)} {invoices[orderId]!.currency}
                                                                     </span>
                                                                 </div>
                                                                 <div className="flex justify-between font-bold text-lg pt-2 border-t border-[#f8d7e0] dark:border-gray-700">
                                                                     <span className="text-gray-900 dark:text-white">Total</span>
                                                                     <span className="text-[#d4849a] dark:text-pink-400">
-                                                                        {invoices[order.id]!.totalAmount.toFixed(2)} {invoices[order.id]!.currency}
+                                                                        {invoices[orderId]!.totalAmount.toFixed(2)} {invoices[orderId]!.currency}
                                                                     </span>
                                                                 </div>
                                                             </div>
 
                                                             {/* Email sent notice */}
-                                                            {invoices[order.id]!.email && (
+                                                            {invoices[orderId]!.email && (
                                                                 <div className="mt-4 flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
                                                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                                     </svg>
-                                                                    Factura a fost trimisă la: {invoices[order.id]!.email}
+                                                                    Factura a fost trimisă la: {invoices[orderId]!.email}
                                                                 </div>
                                                             )}
                                                         </div>
@@ -395,9 +440,128 @@ export default function OrdersPage() {
                                             )}
                                         </div>
                                     )}
+
+                                    {/* Shipment Section */}
+                                    {shipments[orderId] !== undefined && (
+                                        <div className="mt-4 pt-4 border-t border-[#f8d7e0] dark:border-gray-700">
+                                            {shipments[orderId] ? (
+                                                <div>
+                                                    <button
+                                                        onClick={() => toggleShipment(orderId)}
+                                                        className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl hover:from-purple-100 hover:to-purple-150 dark:hover:from-purple-800/40 dark:hover:to-purple-700/40 transition-all"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <svg
+                                                                className="w-5 h-5 text-purple-600 dark:text-purple-400"
+                                                                fill="none"
+                                                                viewBox="0 0 24 24"
+                                                                stroke="currentColor"
+                                                            >
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    strokeWidth={2}
+                                                                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                                                                />
+                                                            </svg>
+                                                            <span className="font-semibold text-purple-800 dark:text-purple-200">
+                                                                Expediere: AWB {shipments[orderId]!.awbNumber}
+                                                            </span>
+                                                        </div>
+                                                        <svg
+                                                            className={`w-5 h-5 text-purple-500 dark:text-purple-400 transition-transform ${
+                                                                expandedShipment === orderId ? "rotate-180" : ""
+                                                            }`}
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth={2}
+                                                                d="M19 9l-7 7-7-7"
+                                                            />
+                                                        </svg>
+                                                    </button>
+
+                                                    {/* Expanded Shipment Details */}
+                                                    {expandedShipment === orderId && (
+                                                        <div className="mt-4 p-4 bg-white dark:bg-gray-800 border border-purple-200 dark:border-purple-700 rounded-xl">
+                                                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                                                <div>
+                                                                    <p className="text-sm text-gray-500 dark:text-gray-400">AWB</p>
+                                                                    <p className="font-mono font-bold text-purple-600 dark:text-purple-400">
+                                                                        {shipments[orderId]!.awbNumber}
+                                                                    </p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-sm text-gray-500 dark:text-gray-400">Curier</p>
+                                                                    <p className="font-medium text-gray-900 dark:text-white">
+                                                                        {shipments[orderId]!.carrierName}
+                                                                    </p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-sm text-gray-500 dark:text-gray-400">Cost Livrare</p>
+                                                                    <p className="font-medium text-gray-900 dark:text-white">
+                                                                        {shipments[orderId]!.shippingCost.toFixed(2)} RON
+                                                                    </p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-sm text-gray-500 dark:text-gray-400">Greutate</p>
+                                                                    <p className="font-medium text-gray-900 dark:text-white">
+                                                                        {shipments[orderId]!.totalWeight.toFixed(2)} kg
+                                                                    </p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-sm text-gray-500 dark:text-gray-400">Data Expedierii</p>
+                                                                    <p className="font-medium text-gray-900 dark:text-white">
+                                                                        {formatDate(shipments[orderId]!.shippedAt)}
+                                                                    </p>
+                                                                </div>
+                                                                {shipments[orderId]!.estimatedDeliveryDate && (
+                                                                    <div>
+                                                                        <p className="text-sm text-gray-500 dark:text-gray-400">Livrare Estimată</p>
+                                                                        <p className="font-medium text-gray-900 dark:text-white">
+                                                                            {shipments[orderId]!.estimatedDeliveryDate}
+                                                                        </p>
+                                                                    </div>
+                                                                )}
+                                                                <div className="col-span-2">
+                                                                    <p className="text-sm text-gray-500 dark:text-gray-400">Adresa de Livrare</p>
+                                                                    <p className="font-medium text-gray-900 dark:text-white">
+                                                                        {shipments[orderId]!.deliveryAddress}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Tracking Info */}
+                                                            <div className="mt-4 p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg border border-purple-200 dark:border-purple-700">
+                                                                <div className="flex items-center gap-2 text-sm text-purple-700 dark:text-purple-300">
+                                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                                                    </svg>
+                                                                    <span>Urmărește coletul cu AWB: </span>
+                                                                    <span className="font-mono font-bold">{shipments[orderId]!.awbNumber}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 px-4 py-2">
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    Expedierea nu a fost încă inițiată
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 ) : null}
             </div>

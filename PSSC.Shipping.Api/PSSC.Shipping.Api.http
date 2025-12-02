@@ -1,6 +1,87 @@
-@PSSC.Shipping.Api_HostAddress = http://localhost:5096
+@PSSC.Shipping.Api_HostAddress = https://localhost:7003
 
-GET {{PSSC.Shipping.Api_HostAddress}}/weatherforecast/
+### Health Check
+GET {{PSSC.Shipping.Api_HostAddress}}/health
 Accept: application/json
 
 ###
+
+### Get Available Carriers
+GET {{PSSC.Shipping.Api_HostAddress}}/api/carriers
+Accept: application/json
+
+###
+
+### Validate Address
+POST {{PSSC.Shipping.Api_HostAddress}}/api/address/validate
+Content-Type: application/json
+
+{
+    "city": "București",
+    "street": "Strada Victoriei 10",
+    "zipCode": "010061",
+    "contactPhone": "0722123456",
+    "country": "Romania"
+}
+
+###
+
+### Calculate Shipping Cost
+POST {{PSSC.Shipping.Api_HostAddress}}/api/shipping/calculate
+Content-Type: application/json
+
+{
+    "carrierCode": "FAN",
+    "totalWeight": 2.5
+}
+
+###
+
+### Ship Order
+POST {{PSSC.Shipping.Api_HostAddress}}/api/shipments
+Content-Type: application/json
+
+{
+    "orderId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "orderNumber": "ORD-2024-00001",
+    "customerId": "CUST-001",
+    "customerName": "Ion Popescu",
+    "deliveryAddress": "Strada Victoriei 10, București, 010061",
+    "contactPhone": "0722123456",
+    "preferredCarrierCode": "FAN",
+    "orderLines": [
+        {
+            "productCode": "BOOK-001",
+            "productName": "Domain-Driven Design",
+            "quantity": 1,
+            "weight": 0.8
+        },
+        {
+            "productCode": "BOOK-002",
+            "productName": "Clean Code",
+            "quantity": 2,
+            "weight": 0.6
+        }
+    ]
+}
+
+###
+
+### Get Shipment by Order ID
+GET {{PSSC.Shipping.Api_HostAddress}}/api/shipments/order/3fa85f64-5717-4562-b3fc-2c963f66afa6
+Accept: application/json
+
+###
+
+### Track Shipment by AWB
+GET {{PSSC.Shipping.Api_HostAddress}}/api/shipments/track/FAN-20251202-00000001
+Accept: application/json
+
+###
+
+### Get Customer Shipments
+GET {{PSSC.Shipping.Api_HostAddress}}/api/customers/CUST-001/shipments
+Accept: application/json
+
+###
+

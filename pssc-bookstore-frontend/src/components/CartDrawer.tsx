@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
-import { placeOrder, generateInvoice } from '@/lib/api';
-import { PlaceOrderResponse, GenerateInvoiceResponse, CheckoutFormData, FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from '@/types';
+import { placeOrder, generateInvoice, shipOrder } from '@/lib/api';
+import { PlaceOrderResponse, GenerateInvoiceResponse, CheckoutFormData, ShippingFormData, ShipmentResponse, FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from '@/types';
 import { getBookImage } from '@/lib/bookImages';
 import { CheckoutForm } from './CheckoutForm';
+import { ShippingForm } from './ShippingForm';
 import toast from 'react-hot-toast';
 import {
     ShoppingCart,
@@ -21,11 +22,12 @@ import {
     Truck,
     Gift,
     FileText,
-    ArrowRight
+    ArrowRight,
+    Package
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type CheckoutStep = 'cart' | 'billing' | 'success';
+type CheckoutStep = 'cart' | 'shipping' | 'billing' | 'success';
 
 export function CartDrawer() {
     const { items, removeFromCart, updateQuantity, clearCart, totalPrice, totalItems, isCartOpen, closeCart } = useCart();
@@ -33,27 +35,43 @@ export function CartDrawer() {
     const [isCheckingOut, setIsCheckingOut] = useState(false);
     const [orderResult, setOrderResult] = useState<PlaceOrderResponse | null>(null);
     const [invoiceResult, setInvoiceResult] = useState<GenerateInvoiceResponse | null>(null);
+    const [shipmentResult, setShipmentResult] = useState<ShipmentResponse | null>(null);
+    const [shippingData, setShippingData] = useState<ShippingFormData | null>(null);
+    const [customerId, setCustomerId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    // Proceed to billing form
-    const handleProceedToBilling = () => {
+    // Proceed to shipping form
+    const handleProceedToShipping = () => {
         if (items.length === 0) return;
         setError(null);
+        setCheckoutStep('shipping');
+    };
+
+    // Handle shipping form submission
+    const handleShippingSubmit = (data: ShippingFormData) => {
+        setShippingData(data);
         setCheckoutStep('billing');
+    };
+
+    // Handle back from billing to shipping
+    const handleBackToShipping = () => {
+        setCheckoutStep('shipping');
+        setError(null);
     };
 
     // Handle full checkout with invoice generation
     const handleCheckoutWithInvoice = async (billingData: CheckoutFormData) => {
-        if (items.length === 0) return;
+        if (items.length === 0 || !shippingData) return;
 
         setIsCheckingOut(true);
         setError(null);
 
         try {
             // Step 1: Place the order
-            const customerId = 'customer-web-' + Date.now();
+            const newCustomerId = 'customer-web-' + Date.now();
+            setCustomerId(newCustomerId);
             const orderData = await placeOrder(
-                customerId,
+                newCustomerId,
                 items.map(item => ({
                     productCode: item.code,
                     quantity: item.quantity,
@@ -100,15 +118,46 @@ export function CartDrawer() {
                         duration: 5000,
                     });
                 }
-                clearCart();
-                setCheckoutStep('success');
             } else if ('errors' in invoiceData) {
                 // Invoice generation failed but order was placed
                 toast.error('Factura nu a putut fi generată');
                 setError(`Comanda a fost plasată dar factura nu a putut fi generată: ${invoiceData.errors.join(', ')}`);
-                clearCart();
-                setCheckoutStep('success');
             }
+
+            // Step 3: Create shipment
+            const deliveryAddress = `${shippingData.street}, ${shippingData.city}, ${shippingData.zipCode}`;
+            const shipmentRequest = {
+                orderId: orderData.orderId,
+                orderNumber: orderData.orderNumber,
+                customerId: newCustomerId,
+                customerName: billingData.clientName,
+                deliveryAddress: deliveryAddress,
+                contactPhone: shippingData.contactPhone,
+                preferredCarrierCode: shippingData.preferredCarrierCode,
+                orderLines: orderData.lines.map((line: { productCode: string; quantity: number }) => ({
+                    productCode: line.productCode,
+                    productName: items.find(i => i.code === line.productCode)?.name || line.productCode,
+                    quantity: line.quantity,
+                    weight: 0.5, // Default weight per book
+                })),
+            };
+
+            const shipmentData = await shipOrder(shipmentRequest);
+
+            if ('success' in shipmentData && shipmentData.success) {
+                const successShipment = shipmentData as ShipmentResponse;
+                setShipmentResult(successShipment);
+                toast.success(`Expediere inițiată! AWB: ${successShipment.awbNumber}`, {
+                    icon: '🚚',
+                    duration: 5000,
+                });
+            } else if ('errors' in shipmentData) {
+                toast.error('Expedierea nu a putut fi inițiată');
+                console.error('Shipment errors:', shipmentData.errors);
+            }
+
+            clearCart();
+            setCheckoutStep('success');
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'A apărut o eroare la plasarea comenzii';
             toast.error(errorMessage);
@@ -121,6 +170,9 @@ export function CartDrawer() {
     const handleClose = () => {
         setOrderResult(null);
         setInvoiceResult(null);
+        setShipmentResult(null);
+        setShippingData(null);
+        setCustomerId(null);
         setError(null);
         setCheckoutStep('cart');
         closeCart();
@@ -191,6 +243,12 @@ export function CartDrawer() {
                                             <span className="text-gray-500 dark:text-gray-400">Număr Comandă</span>
                                             <span className="font-mono font-bold text-[#d4849a]">{orderResult.orderNumber}</span>
                                         </div>
+                                        {customerId && (
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500 dark:text-gray-400">ID Client</span>
+                                                <span className="font-mono text-xs text-gray-700 dark:text-gray-300 break-all">{customerId}</span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between">
                                             <span className="text-gray-500 dark:text-gray-400">Total Comandă</span>
                                             <span className="font-bold text-gray-800 dark:text-white">{orderResult.totalAmount.toFixed(2)} {orderResult.currency}</span>
@@ -260,6 +318,46 @@ export function CartDrawer() {
                                 </div>
                             )}
 
+                            {/* Shipment Details */}
+                            {shipmentResult && (
+                                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-6 w-full max-w-sm mb-4 border border-purple-200 dark:border-purple-800">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Package className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                                        <span className="font-semibold text-purple-800 dark:text-purple-300">Expediere Inițiată</span>
+                                    </div>
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-purple-600 dark:text-purple-400">AWB</span>
+                                            <span className="font-mono font-bold text-purple-800 dark:text-purple-300">{shipmentResult.awbNumber}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-purple-600 dark:text-purple-400">Curier</span>
+                                            <span className="text-purple-800 dark:text-purple-300">{shipmentResult.carrierName}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-purple-600 dark:text-purple-400">Cost Livrare</span>
+                                            <span className="text-purple-800 dark:text-purple-300">{shipmentResult.shippingCost.toFixed(2)} RON</span>
+                                        </div>
+                                        {shipmentResult.estimatedDeliveryDate && (
+                                            <div className="flex justify-between">
+                                                <span className="text-purple-600 dark:text-purple-400">Livrare Estimată</span>
+                                                <span className="text-purple-800 dark:text-purple-300">{shipmentResult.estimatedDeliveryDate}</span>
+                                            </div>
+                                        )}
+                                        <div className="border-t border-purple-200 dark:border-purple-700 my-2 pt-2">
+                                            <p className="text-xs text-purple-600 dark:text-purple-400">Adresa de livrare:</p>
+                                            <p className="text-purple-800 dark:text-purple-300">{shipmentResult.deliveryAddress}</p>
+                                        </div>
+                                        <div className="mt-3 p-2 bg-purple-100 dark:bg-purple-900/40 rounded-lg">
+                                            <p className="text-xs text-purple-700 dark:text-purple-300 flex items-center gap-1">
+                                                <Truck className="w-3 h-3" />
+                                                Urmărește coletul cu AWB: <span className="font-mono font-medium">{shipmentResult.awbNumber}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Error message if invoice failed */}
                             {error && (
                                 <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg mb-4 text-sm">
@@ -274,11 +372,19 @@ export function CartDrawer() {
                                 Continuă Cumpărăturile
                             </button>
                         </div>
+                    ) : checkoutStep === 'shipping' ? (
+                        /* Shipping Form */
+                        <ShippingForm
+                            onSubmit={handleShippingSubmit}
+                            onBack={handleBackToCart}
+                            isSubmitting={false}
+                            totalWeight={items.reduce((sum, item) => sum + item.quantity * 0.5, 0)}
+                        />
                     ) : checkoutStep === 'billing' ? (
                         /* Billing Form */
                         <CheckoutForm
                             onSubmit={handleCheckoutWithInvoice}
-                            onBack={handleBackToCart}
+                            onBack={handleBackToShipping}
                             isSubmitting={isCheckingOut}
                         />
                     ) : items.length === 0 ? (
@@ -447,14 +553,14 @@ export function CartDrawer() {
                                         </div>
                                     )}
 
-                                    {/* Proceed to Billing button */}
+                                    {/* Proceed to Shipping button */}
                                     <button
-                                        onClick={handleProceedToBilling}
+                                        onClick={handleProceedToShipping}
                                         disabled={isCheckingOut}
                                         className="w-full py-4 bg-gradient-to-r from-[#f3c9d5] to-[#e8b4c4] dark:from-gray-600 dark:to-gray-500 text-gray-800 dark:text-white rounded-xl font-bold text-lg hover:from-[#e8b4c4] hover:to-[#d4849a] dark:hover:from-gray-500 dark:hover:to-gray-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
-                                        <CreditCard className="w-5 h-5" />
-                                        Continuă cu Facturarea
+                                        <Truck className="w-5 h-5" />
+                                        Continuă la Livrare
                                         <ArrowRight className="w-5 h-5" />
                                     </button>
 

@@ -1,7 +1,8 @@
-import { Product, ValidateFiscalCodeResponse, GenerateInvoiceRequest, GenerateInvoiceResponse, GenerateInvoiceErrorResponse, InvoiceDto, InvoicesListResponse } from '@/types';
+import { Product, ValidateFiscalCodeResponse, GenerateInvoiceRequest, GenerateInvoiceResponse, GenerateInvoiceErrorResponse, InvoiceDto, InvoicesListResponse, Carrier, ShipOrderRequest, ShipmentResponse, ShipmentErrorResponse, TrackingResponse, ValidateAddressRequest, ValidateAddressResponse, CalculateShippingRequest, CalculateShippingResponse } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5122';
 const INVOICING_API_URL = process.env.NEXT_PUBLIC_INVOICING_API_URL || 'http://localhost:5109';
+const SHIPPING_API_URL = process.env.NEXT_PUBLIC_SHIPPING_API_URL || 'http://localhost:5096';
 
 export async function getProducts(category?: string): Promise<Product[]> {
     const url = category && category !== 'all'
@@ -189,6 +190,128 @@ export async function getAllInvoices(skip = 0, take = 50): Promise<InvoicesListR
 
     if (!response.ok) {
         throw new Error('Failed to fetch invoices');
+    }
+
+    return response.json();
+}
+
+// === Shipping API ===
+
+export async function getCarriers(): Promise<Carrier[]> {
+    const response = await fetch(`${SHIPPING_API_URL}/api/carriers`, {
+        cache: 'no-store',
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch carriers');
+    }
+
+    const data = await response.json();
+    // API returns { value: Carrier[], Count: number }
+    return data.value || data;
+}
+
+export async function shipOrder(request: ShipOrderRequest): Promise<ShipmentResponse | ShipmentErrorResponse> {
+    const response = await fetch(`${SHIPPING_API_URL}/api/shipments`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        return data as ShipmentErrorResponse;
+    }
+
+    return data as ShipmentResponse;
+}
+
+export async function getShipmentByOrderId(orderId: string): Promise<ShipmentResponse | null> {
+    try {
+        const response = await fetch(`${SHIPPING_API_URL}/api/shipments/order/${orderId}`, {
+            cache: 'no-store',
+        });
+
+        if (response.status === 404) {
+            return null;
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch shipment');
+        }
+
+        return response.json();
+    } catch {
+        return null;
+    }
+}
+
+export async function trackShipment(awbNumber: string): Promise<TrackingResponse | null> {
+    try {
+        const response = await fetch(`${SHIPPING_API_URL}/api/shipments/track/${encodeURIComponent(awbNumber)}`, {
+            cache: 'no-store',
+        });
+
+        if (response.status === 404) {
+            return null;
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to track shipment');
+        }
+
+        return response.json();
+    } catch {
+        return null;
+    }
+}
+
+export async function getCustomerShipments(customerId: string): Promise<ShipmentResponse[]> {
+    try {
+        const response = await fetch(`${SHIPPING_API_URL}/api/customers/${customerId}/shipments`, {
+            cache: 'no-store',
+        });
+
+        if (!response.ok) {
+            return [];
+        }
+
+        return response.json();
+    } catch {
+        return [];
+    }
+}
+
+export async function validateDeliveryAddress(request: ValidateAddressRequest): Promise<ValidateAddressResponse> {
+    const response = await fetch(`${SHIPPING_API_URL}/api/address/validate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to validate address');
+    }
+
+    return response.json();
+}
+
+export async function calculateShipping(request: CalculateShippingRequest): Promise<CalculateShippingResponse> {
+    const response = await fetch(`${SHIPPING_API_URL}/api/shipping/calculate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to calculate shipping');
     }
 
     return response.json();

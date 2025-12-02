@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\buildMultiTargeting\PSSC.Shipping.Api.props" />
-</Project>

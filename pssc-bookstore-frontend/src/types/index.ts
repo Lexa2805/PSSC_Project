@@ -164,3 +164,110 @@ export interface InvoicesListResponse {
     take: number;
     items: InvoiceDto[];
 }
+
+// === Shipping Types ===
+
+export interface Carrier {
+    code: string;
+    name: string;
+    baseCost: number;
+}
+
+export interface ShipOrderLineRequest {
+    productCode: string;
+    productName: string;
+    quantity: number;
+    weight: number; // in kg, default 0.5 per item
+}
+
+export interface ShipOrderRequest {
+    orderId: string;
+    orderNumber: string;
+    customerId: string;
+    customerName: string;
+    deliveryAddress: string; // Format: "Street, City, ZipCode"
+    contactPhone: string;
+    preferredCarrierCode?: string;
+    orderLines: ShipOrderLineRequest[];
+}
+
+export interface ShipmentResponse {
+    success: boolean;
+    shipmentId: string;
+    orderId: string;
+    orderNumber: string;
+    awbNumber: string;
+    carrierCode: string;
+    carrierName: string;
+    customerName: string;
+    deliveryAddress: string;
+    shippingCost: number;
+    totalWeight: number;
+    estimatedDeliveryDate?: string;
+    shippedAt: string;
+}
+
+export interface ShipmentErrorResponse {
+    success: boolean;
+    orderId: string;
+    orderNumber?: string;
+    errors: string[];
+}
+
+export interface TrackingEvent {
+    status: string;
+    timestamp: string;
+    location: string;
+}
+
+export interface TrackingResponse {
+    awbNumber: string;
+    orderNumber: string;
+    carrierName: string;
+    status: string;
+    customerName: string;
+    deliveryAddress: string;
+    shippedAt: string;
+    estimatedDeliveryDate?: string;
+    trackingHistory: TrackingEvent[];
+}
+
+export interface ValidateAddressRequest {
+    city: string;
+    street: string;
+    zipCode: string;
+    contactPhone: string;
+    country?: string;
+}
+
+export interface ValidateAddressResponse {
+    isValid: boolean;
+    normalizedAddress?: string;
+    fullAddress?: string;
+    error?: string;
+}
+
+export interface CalculateShippingRequest {
+    carrierCode: string;
+    totalWeight: number;
+}
+
+export interface CalculateShippingResponse {
+    carrierCode: string;
+    carrierName: string;
+    weight: number;
+    baseCost: number;
+    weightCost: number;
+    totalCost: number;
+    currency: string;
+    estimatedDays: number;
+}
+
+// Shipping form data (for checkout)
+export interface ShippingFormData {
+    city: string;
+    street: string;
+    zipCode: string;
+    contactPhone: string;
+    preferredCarrierCode?: string;
+}
