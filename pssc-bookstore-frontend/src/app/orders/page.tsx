@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { getCustomerOrders } from "@/lib/api";
-import { Order } from "@/types";
+import { useState, useEffect } from "react";
+import { getCustomerOrders, getInvoiceByOrderId } from "@/lib/api";
+import { Order, InvoiceDto } from "@/types";
 
 export default function OrdersPage() {
     const [customerId, setCustomerId] = useState("");
     const [orders, setOrders] = useState<Order[]>([]);
+    const [invoices, setInvoices] = useState<Record<string, InvoiceDto | null>>({});
     const [loading, setLoading] = useState(false);
     const [searched, setSearched] = useState(false);
+    const [expandedInvoice, setExpandedInvoice] = useState<string | null>(null);
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -16,6 +18,8 @@ export default function OrdersPage() {
 
         setLoading(true);
         setSearched(true);
+        setInvoices({});
+        setExpandedInvoice(null);
         try {
             const data = await getCustomerOrders(customerId);
             setOrders(data);
@@ -26,6 +30,27 @@ export default function OrdersPage() {
             setLoading(false);
         }
     };
+
+    // Fetch invoices for all orders after orders are loaded
+    useEffect(() => {
+        const fetchInvoices = async () => {
+            if (orders.length === 0) return;
+            
+            const invoicePromises = orders.map(async (order) => {
+                const invoice = await getInvoiceByOrderId(order.id);
+                return { orderId: order.id, invoice };
+            });
+
+            const results = await Promise.all(invoicePromises);
+            const invoiceMap: Record<string, InvoiceDto | null> = {};
+            results.forEach(({ orderId, invoice }) => {
+                invoiceMap[orderId] = invoice;
+            });
+            setInvoices(invoiceMap);
+        };
+
+        fetchInvoices();
+    }, [orders]);
 
     const getStatusColor = (status: string) => {
         switch (status.toLowerCase()) {
@@ -42,6 +67,20 @@ export default function OrdersPage() {
             default:
                 return "bg-gray-100 text-gray-800";
         }
+    };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString("ro-RO", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    };
+
+    const toggleInvoice = (orderId: string) => {
+        setExpandedInvoice(expandedInvoice === orderId ? null : orderId);
     };
 
     return (
@@ -227,6 +266,135 @@ export default function OrdersPage() {
                                             {order.totalAmount.toFixed(2)} lei
                                         </span>
                                     </div>
+
+                                    {/* Invoice Section */}
+                                    {invoices[order.id] !== undefined && (
+                                        <div className="mt-4 pt-4 border-t border-[#f8d7e0] dark:border-gray-700">
+                                            {invoices[order.id] ? (
+                                                <div>
+                                                    <button
+                                                        onClick={() => toggleInvoice(order.id)}
+                                                        className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#fce4ec] to-[#f8d7e0] dark:from-gray-700 dark:to-gray-600 rounded-xl hover:from-[#f8d7e0] hover:to-[#f3c9d5] dark:hover:from-gray-600 dark:hover:to-gray-500 transition-all"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <svg
+                                                                className="w-5 h-5 text-[#d4849a] dark:text-pink-400"
+                                                                fill="none"
+                                                                viewBox="0 0 24 24"
+                                                                stroke="currentColor"
+                                                            >
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    strokeWidth={2}
+                                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                                                />
+                                                            </svg>
+                                                            <span className="font-semibold text-gray-800 dark:text-white">
+                                                                Factură: {invoices[order.id]!.invoiceNumber}
+                                                            </span>
+                                                        </div>
+                                                        <svg
+                                                            className={`w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform ${
+                                                                expandedInvoice === order.id ? "rotate-180" : ""
+                                                            }`}
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth={2}
+                                                                d="M19 9l-7 7-7-7"
+                                                            />
+                                                        </svg>
+                                                    </button>
+
+                                                    {/* Expanded Invoice Details */}
+                                                    {expandedInvoice === order.id && (
+                                                        <div className="mt-4 p-4 bg-white dark:bg-gray-800 border border-[#f3c9d5] dark:border-gray-600 rounded-xl">
+                                                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                                                <div>
+                                                                    <p className="text-sm text-gray-500 dark:text-gray-400">Client</p>
+                                                                    <p className="font-medium text-gray-900 dark:text-white">
+                                                                        {invoices[order.id]!.clientName}
+                                                                    </p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-sm text-gray-500 dark:text-gray-400">Tip</p>
+                                                                    <p className="font-medium text-gray-900 dark:text-white">
+                                                                        {invoices[order.id]!.isCompany ? "Persoană Juridică" : "Persoană Fizică"}
+                                                                    </p>
+                                                                </div>
+                                                                {invoices[order.id]!.fiscalCode && (
+                                                                    <div>
+                                                                        <p className="text-sm text-gray-500 dark:text-gray-400">CUI</p>
+                                                                        <p className="font-medium text-gray-900 dark:text-white">
+                                                                            {invoices[order.id]!.fiscalCode}
+                                                                        </p>
+                                                                    </div>
+                                                                )}
+                                                                <div>
+                                                                    <p className="text-sm text-gray-500 dark:text-gray-400">Data Emiterii</p>
+                                                                    <p className="font-medium text-gray-900 dark:text-white">
+                                                                        {formatDate(invoices[order.id]!.issuedAt)}
+                                                                    </p>
+                                                                </div>
+                                                                <div className="col-span-2">
+                                                                    <p className="text-sm text-gray-500 dark:text-gray-400">Adresa de Facturare</p>
+                                                                    <p className="font-medium text-gray-900 dark:text-white">
+                                                                        {invoices[order.id]!.billingAddress}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Invoice Totals */}
+                                                            <div className="border-t border-[#f8d7e0] dark:border-gray-700 pt-4 space-y-2">
+                                                                <div className="flex justify-between text-sm">
+                                                                    <span className="text-gray-600 dark:text-gray-400">Subtotal (fără TVA)</span>
+                                                                    <span className="text-gray-900 dark:text-white">
+                                                                        {invoices[order.id]!.netAmount.toFixed(2)} {invoices[order.id]!.currency}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex justify-between text-sm">
+                                                                    <span className="text-gray-600 dark:text-gray-400">
+                                                                        TVA ({(invoices[order.id]!.vatRate * 100).toFixed(0)}%)
+                                                                    </span>
+                                                                    <span className="text-gray-900 dark:text-white">
+                                                                        {invoices[order.id]!.vatAmount.toFixed(2)} {invoices[order.id]!.currency}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex justify-between font-bold text-lg pt-2 border-t border-[#f8d7e0] dark:border-gray-700">
+                                                                    <span className="text-gray-900 dark:text-white">Total</span>
+                                                                    <span className="text-[#d4849a] dark:text-pink-400">
+                                                                        {invoices[order.id]!.totalAmount.toFixed(2)} {invoices[order.id]!.currency}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Email sent notice */}
+                                                            {invoices[order.id]!.email && (
+                                                                <div className="mt-4 flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                    </svg>
+                                                                    Factura a fost trimisă la: {invoices[order.id]!.email}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 px-4 py-2">
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    Factura nu este disponibilă pentru această comandă
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))}

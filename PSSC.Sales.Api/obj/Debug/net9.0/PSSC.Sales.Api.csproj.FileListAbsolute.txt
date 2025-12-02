@@ -43,12 +43,6 @@ D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\scopedcss\bundle\PSSC.Sales.Api.
 D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\staticwebassets.build.json
 D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\staticwebassets.development.json
 D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\staticwebassets.build.endpoints.json
-D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\staticwebassets\msbuild.PSSC.Sales.Api.Microsoft.AspNetCore.StaticWebAssets.props
-D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\staticwebassets\msbuild.PSSC.Sales.Api.Microsoft.AspNetCore.StaticWebAssetEndpoints.props
-D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\staticwebassets\msbuild.build.PSSC.Sales.Api.props
-D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\staticwebassets\msbuild.buildMultiTargeting.PSSC.Sales.Api.props
-D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\staticwebassets\msbuild.buildTransitive.PSSC.Sales.Api.props
-D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\staticwebassets.pack.json
 D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\PSSC.Sal.EEB19196.Up2Date
 D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\PSSC.Sales.Api.dll
 D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\refint\PSSC.Sales.Api.dll
@@ -168,3 +162,8 @@ d:\PSSC_Project\PSSC.Sales.Api\bin\Debug\net9.0\ru\Microsoft.CodeAnalysis.Worksp
 d:\PSSC_Project\PSSC.Sales.Api\bin\Debug\net9.0\tr\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 d:\PSSC_Project\PSSC.Sales.Api\bin\Debug\net9.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 d:\PSSC_Project\PSSC.Sales.Api\bin\Debug\net9.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\rpswa.dswa.cache.json
+D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\rjimswa.dswa.cache.json
+D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\rjsmrazor.dswa.cache.json
+D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\rjsmcshtml.dswa.cache.json
+D:\PSSC_Project\PSSC.Sales.Api\obj\Debug\net9.0\staticwebassets.build.json.cache

@@ -1,6 +1,7 @@
-import { Product } from '@/types';
+import { Product, ValidateFiscalCodeResponse, GenerateInvoiceRequest, GenerateInvoiceResponse, GenerateInvoiceErrorResponse, InvoiceDto, InvoicesListResponse } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5122';
+const INVOICING_API_URL = process.env.NEXT_PUBLIC_INVOICING_API_URL || 'http://localhost:5109';
 
 export async function getProducts(category?: string): Promise<Product[]> {
     const url = category && category !== 'all'
@@ -82,6 +83,112 @@ export async function getCustomerOrders(customerId: string) {
 
     if (!response.ok) {
         throw new Error('Failed to fetch orders');
+    }
+
+    return response.json();
+}
+
+// === Invoicing API ===
+
+export async function validateFiscalCode(fiscalCode: string): Promise<ValidateFiscalCodeResponse> {
+    const response = await fetch(`${INVOICING_API_URL}/api/fiscal-code/validate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fiscalCode }),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to validate fiscal code');
+    }
+
+    return response.json();
+}
+
+export async function generateInvoice(request: GenerateInvoiceRequest): Promise<GenerateInvoiceResponse | GenerateInvoiceErrorResponse> {
+    const response = await fetch(`${INVOICING_API_URL}/api/invoices/generate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+        return data as GenerateInvoiceErrorResponse;
+    }
+
+    return data as GenerateInvoiceResponse;
+}
+
+// === Invoice Retrieval ===
+
+export async function getInvoiceByOrderId(orderId: string): Promise<InvoiceDto | null> {
+    try {
+        const response = await fetch(`${INVOICING_API_URL}/api/invoices/by-order/${orderId}`, {
+            cache: 'no-store',
+        });
+
+        if (response.status === 404) {
+            return null;
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch invoice');
+        }
+
+        return response.json();
+    } catch {
+        return null;
+    }
+}
+
+export async function getInvoiceByNumber(invoiceNumber: string): Promise<InvoiceDto | null> {
+    try {
+        const response = await fetch(`${INVOICING_API_URL}/api/invoices/${encodeURIComponent(invoiceNumber)}`, {
+            cache: 'no-store',
+        });
+
+        if (response.status === 404) {
+            return null;
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch invoice');
+        }
+
+        return response.json();
+    } catch {
+        return null;
+    }
+}
+
+export async function getInvoicesByEmail(email: string): Promise<InvoiceDto[]> {
+    try {
+        const response = await fetch(`${INVOICING_API_URL}/api/invoices/by-email/${encodeURIComponent(email)}`, {
+            cache: 'no-store',
+        });
+
+        if (!response.ok) {
+            return [];
+        }
+
+        return response.json();
+    } catch {
+        return [];
+    }
+}
+
+export async function getAllInvoices(skip = 0, take = 50): Promise<InvoicesListResponse> {
+    const response = await fetch(`${INVOICING_API_URL}/api/invoices?skip=${skip}&take=${take}`, {
+        cache: 'no-store',
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch invoices');
     }
 
     return response.json();

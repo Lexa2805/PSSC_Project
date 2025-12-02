@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
-import { placeOrder } from '@/lib/api';
-import { PlaceOrderResponse, FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from '@/types';
+import { placeOrder, generateInvoice } from '@/lib/api';
+import { PlaceOrderResponse, GenerateInvoiceResponse, CheckoutFormData, FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from '@/types';
 import { getBookImage } from '@/lib/bookImages';
+import { CheckoutForm } from './CheckoutForm';
+import toast from 'react-hot-toast';
 import {
     ShoppingCart,
     X,
@@ -17,35 +19,100 @@ import {
     Loader2,
     ShoppingBag,
     Truck,
-    Gift
+    Gift,
+    FileText,
+    ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+type CheckoutStep = 'cart' | 'billing' | 'success';
+
 export function CartDrawer() {
     const { items, removeFromCart, updateQuantity, clearCart, totalPrice, totalItems, isCartOpen, closeCart } = useCart();
+    const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>('cart');
     const [isCheckingOut, setIsCheckingOut] = useState(false);
     const [orderResult, setOrderResult] = useState<PlaceOrderResponse | null>(null);
+    const [invoiceResult, setInvoiceResult] = useState<GenerateInvoiceResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const handleCheckout = async () => {
+    // Proceed to billing form
+    const handleProceedToBilling = () => {
+        if (items.length === 0) return;
+        setError(null);
+        setCheckoutStep('billing');
+    };
+
+    // Handle full checkout with invoice generation
+    const handleCheckoutWithInvoice = async (billingData: CheckoutFormData) => {
         if (items.length === 0) return;
 
         setIsCheckingOut(true);
         setError(null);
 
         try {
-            const result = await placeOrder(
-                'customer-web-' + Date.now(),
+            // Step 1: Place the order
+            const customerId = 'customer-web-' + Date.now();
+            const orderData = await placeOrder(
+                customerId,
                 items.map(item => ({
                     productCode: item.code,
                     quantity: item.quantity,
                 }))
             );
 
-            setOrderResult(result);
-            clearCart();
+            setOrderResult(orderData);
+            toast.success(`Comanda #${orderData.orderNumber} a fost plasată!`, {
+                icon: '📦',
+                duration: 4000,
+            });
+
+            // Step 2: Generate invoice
+            const invoiceRequest = {
+                orderId: orderData.orderId,
+                orderNumber: orderData.orderNumber,
+                fiscalCode: billingData.isCompany ? billingData.fiscalCode : undefined,
+                clientName: billingData.clientName,
+                billingAddress: billingData.billingAddress,
+                orderTotal: orderData.totalAmount,
+                currency: orderData.currency || 'RON',
+                orderLines: orderData.lines.map((line: { productCode: string; quantity: number; unitPrice: number; lineTotal: number }) => ({
+                    productCode: line.productCode,
+                    productName: items.find(i => i.code === line.productCode)?.name || line.productCode,
+                    quantity: line.quantity,
+                    unitPrice: line.unitPrice,
+                    lineTotal: line.lineTotal,
+                })),
+                email: billingData.email,
+            };
+
+            const invoiceData = await generateInvoice(invoiceRequest);
+
+            if ('success' in invoiceData && invoiceData.success) {
+                const successResult = invoiceData as GenerateInvoiceResponse;
+                setInvoiceResult(successResult);
+                toast.success(`Factură ${successResult.invoiceNumber} generată cu succes!`, {
+                    icon: '📄',
+                    duration: 4000,
+                });
+                if (successResult.emailSentTo) {
+                    toast.success(`Factura a fost trimisă la ${successResult.emailSentTo}`, {
+                        icon: '📧',
+                        duration: 5000,
+                    });
+                }
+                clearCart();
+                setCheckoutStep('success');
+            } else if ('errors' in invoiceData) {
+                // Invoice generation failed but order was placed
+                toast.error('Factura nu a putut fi generată');
+                setError(`Comanda a fost plasată dar factura nu a putut fi generată: ${invoiceData.errors.join(', ')}`);
+                clearCart();
+                setCheckoutStep('success');
+            }
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to place order');
+            const errorMessage = err instanceof Error ? err.message : 'A apărut o eroare la plasarea comenzii';
+            toast.error(errorMessage);
+            setError(errorMessage);
         } finally {
             setIsCheckingOut(false);
         }
@@ -53,8 +120,15 @@ export function CartDrawer() {
 
     const handleClose = () => {
         setOrderResult(null);
+        setInvoiceResult(null);
         setError(null);
+        setCheckoutStep('cart');
         closeCart();
+    };
+
+    const handleBackToCart = () => {
+        setCheckoutStep('cart');
+        setError(null);
     };
 
     return (
@@ -96,35 +170,117 @@ export function CartDrawer() {
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
-                    {orderResult ? (
-                        /* Order Success */
+                    {checkoutStep === 'success' ? (
+                        /* Order & Invoice Success */
                         <div className="flex flex-col items-center justify-center h-full p-8 text-center">
                             <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6">
                                 <CheckCircle className="w-10 h-10 text-green-600 dark:text-green-400" />
                             </div>
                             <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Comandă Plasată!</h3>
                             <p className="text-gray-500 dark:text-gray-400 mb-4">Mulțumim pentru achiziție</p>
-                            <div className="bg-[#fdf5f7] dark:bg-gray-800 rounded-xl p-6 w-full max-w-sm">
-                                <div className="flex justify-between mb-2">
-                                    <span className="text-gray-500 dark:text-gray-400">Număr Comandă</span>
-                                    <span className="font-mono font-bold text-[#d4849a]">{orderResult.orderNumber}</span>
+                            
+                            {/* Order Details */}
+                            {orderResult && (
+                                <div className="bg-[#fdf5f7] dark:bg-gray-800 rounded-xl p-6 w-full max-w-sm mb-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <ShoppingBag className="w-5 h-5 text-[#d4849a]" />
+                                        <span className="font-semibold text-gray-800 dark:text-white">Detalii Comandă</span>
+                                    </div>
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500 dark:text-gray-400">Număr Comandă</span>
+                                            <span className="font-mono font-bold text-[#d4849a]">{orderResult.orderNumber}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500 dark:text-gray-400">Total Comandă</span>
+                                            <span className="font-bold text-gray-800 dark:text-white">{orderResult.totalAmount.toFixed(2)} {orderResult.currency}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500 dark:text-gray-400">Produse</span>
+                                            <span className="text-gray-700 dark:text-gray-300">{orderResult.lines.reduce((sum: number, l: { quantity: number }) => sum + l.quantity, 0)}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between mb-2">
-                                    <span className="text-gray-500">Total Amount</span>
-                                    <span className="font-bold">{orderResult.totalAmount.toFixed(2)} {orderResult.currency}</span>
+                            )}
+
+                            {/* Invoice Details */}
+                            {invoiceResult && (
+                                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 w-full max-w-sm mb-4 border border-blue-200 dark:border-blue-800">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                        <span className="font-semibold text-blue-800 dark:text-blue-300">Factură Generată</span>
+                                    </div>
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-blue-600 dark:text-blue-400">Număr Factură</span>
+                                            <span className="font-mono font-bold text-blue-800 dark:text-blue-300">{invoiceResult.invoiceNumber}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-blue-600 dark:text-blue-400">Client</span>
+                                            <span className="text-blue-800 dark:text-blue-300">{invoiceResult.clientName}</span>
+                                        </div>
+                                        {invoiceResult.fiscalCode && (
+                                            <div className="flex justify-between">
+                                                <span className="text-blue-600 dark:text-blue-400">CUI</span>
+                                                <span className="font-mono text-blue-800 dark:text-blue-300">{invoiceResult.fiscalCode}</span>
+                                            </div>
+                                        )}
+                                        {!invoiceResult.isCompany && (
+                                            <div className="flex justify-between">
+                                                <span className="text-blue-600 dark:text-blue-400">Tip Client</span>
+                                                <span className="text-blue-800 dark:text-blue-300">Persoană Fizică</span>
+                                            </div>
+                                        )}
+                                        <div className="border-t border-blue-200 dark:border-blue-700 my-2 pt-2">
+                                            <div className="flex justify-between">
+                                                <span className="text-blue-600 dark:text-blue-400">Subtotal (fără TVA)</span>
+                                                <span className="text-blue-800 dark:text-blue-300">{invoiceResult.netAmount.toFixed(2)} {invoiceResult.currency}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-blue-600 dark:text-blue-400">TVA ({(invoiceResult.vatRate * 100).toFixed(0)}%)</span>
+                                                <span className="text-blue-800 dark:text-blue-300">{invoiceResult.vatAmount.toFixed(2)} {invoiceResult.currency}</span>
+                                            </div>
+                                            <div className="flex justify-between font-bold mt-1">
+                                                <span className="text-blue-700 dark:text-blue-300">Total cu TVA</span>
+                                                <span className="text-blue-800 dark:text-blue-200">{invoiceResult.totalAmount.toFixed(2)} {invoiceResult.currency}</span>
+                                            </div>
+                                        </div>
+                                        <div className="text-xs text-blue-500 dark:text-blue-400 mt-2">
+                                            Emis: {new Date(invoiceResult.issuedAt).toLocaleString('ro-RO')}
+                                        </div>
+                                        {invoiceResult.emailSentTo && (
+                                            <div className="mt-3 p-2 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-700">
+                                                <p className="text-xs text-green-700 dark:text-green-300 flex items-center gap-1">
+                                                    <CheckCircle className="w-3 h-3" />
+                                                    Factură trimisă la: <span className="font-medium">{invoiceResult.emailSentTo}</span>
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Items</span>
-                                    <span>{orderResult.lines.reduce((sum, l) => sum + l.quantity, 0)}</span>
+                            )}
+
+                            {/* Error message if invoice failed */}
+                            {error && (
+                                <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg mb-4 text-sm">
+                                    {error}
                                 </div>
-                            </div>
+                            )}
+
                             <button
                                 onClick={handleClose}
-                                className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 transition-colors"
+                                className="mt-2 px-6 py-3 bg-gradient-to-r from-[#f3c9d5] to-[#e8b4c4] dark:from-gray-600 dark:to-gray-500 text-gray-800 dark:text-white rounded-full font-semibold hover:from-[#e8b4c4] hover:to-[#d4849a] dark:hover:from-gray-500 dark:hover:to-gray-400 transition-colors"
                             >
-                                Continue Shopping
+                                Continuă Cumpărăturile
                             </button>
                         </div>
+                    ) : checkoutStep === 'billing' ? (
+                        /* Billing Form */
+                        <CheckoutForm
+                            onSubmit={handleCheckoutWithInvoice}
+                            onBack={handleBackToCart}
+                            isSubmitting={isCheckingOut}
+                        />
                     ) : items.length === 0 ? (
                         /* Empty Cart */
                         <div className="flex flex-col items-center justify-center h-full p-8 text-center">
@@ -219,7 +375,7 @@ export function CartDrawer() {
                 </div>
 
                 {/* Footer */}
-                {items.length > 0 && !orderResult && (
+                {items.length > 0 && checkoutStep === 'cart' && (
                     <div className="border-t border-[#f8d7e0] dark:border-gray-700 p-6 bg-[#fdf5f7] dark:bg-gray-800">
                         {/* Free Shipping Banner */}
                         {(() => {
@@ -284,23 +440,22 @@ export function CartDrawer() {
                                         </div>
                                     </div>
 
-                                    {/* Checkout button */}
+                                    {/* Error display */}
+                                    {error && (
+                                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+                                            {error}
+                                        </div>
+                                    )}
+
+                                    {/* Proceed to Billing button */}
                                     <button
-                                        onClick={handleCheckout}
+                                        onClick={handleProceedToBilling}
                                         disabled={isCheckingOut}
                                         className="w-full py-4 bg-gradient-to-r from-[#f3c9d5] to-[#e8b4c4] dark:from-gray-600 dark:to-gray-500 text-gray-800 dark:text-white rounded-xl font-bold text-lg hover:from-[#e8b4c4] hover:to-[#d4849a] dark:hover:from-gray-500 dark:hover:to-gray-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
-                                        {isCheckingOut ? (
-                                            <>
-                                                <Loader2 className="w-5 h-5 animate-spin" />
-                                                Se procesează...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <CreditCard className="w-5 h-5" />
-                                                Finalizează comanda • {finalTotal.toFixed(2)} lei
-                                            </>
-                                        )}
+                                        <CreditCard className="w-5 h-5" />
+                                        Continuă cu Facturarea
+                                        <ArrowRight className="w-5 h-5" />
                                     </button>
 
                                     {/* Clear cart */}

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { CartItem, Product } from '@/types';
+import toast from 'react-hot-toast';
 
 interface CartContextType {
     items: CartItem[];
@@ -26,10 +27,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const closeCart = useCallback(() => setIsCartOpen(false), []);
 
     const addToCart = useCallback((product: Product) => {
+        let toastMessage: { type: 'success' | 'error'; message: string } | null = null;
+
         setItems(currentItems => {
             const existingItem = currentItems.find(item => item.code === product.code);
 
             if (existingItem) {
+                if (existingItem.quantity >= existingItem.stockQuantity) {
+                    toastMessage = { type: 'error', message: `Stoc maxim atins pentru "${product.name}"` };
+                    return currentItems;
+                }
+                toastMessage = { type: 'success', message: `"${product.name}" - cantitate actualizată` };
                 return currentItems.map(item =>
                     item.code === product.code
                         ? { ...item, quantity: Math.min(item.quantity + 1, item.stockQuantity) }
@@ -37,12 +45,39 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 );
             }
 
+            toastMessage = { type: 'success', message: `"${product.name}" adăugat în coș` };
             return [...currentItems, { ...product, quantity: 1 }];
         });
+
+        // Show toast after state update
+        setTimeout(() => {
+            if (toastMessage) {
+                if (toastMessage.type === 'error') {
+                    toast.error(toastMessage.message);
+                } else {
+                    toast.success(toastMessage.message, { icon: '🛒' });
+                }
+            }
+        }, 0);
     }, []);
 
     const removeFromCart = useCallback((productCode: string) => {
-        setItems(currentItems => currentItems.filter(item => item.code !== productCode));
+        let itemName: string | null = null;
+
+        setItems(currentItems => {
+            const item = currentItems.find(i => i.code === productCode);
+            if (item) {
+                itemName = item.name;
+            }
+            return currentItems.filter(i => i.code !== productCode);
+        });
+
+        // Show toast after state update
+        setTimeout(() => {
+            if (itemName) {
+                toast.success(`"${itemName}" eliminat din coș`, { icon: '🗑️' });
+            }
+        }, 0);
     }, []);
 
     const updateQuantity = useCallback((productCode: string, quantity: number) => {
@@ -61,7 +96,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }, [removeFromCart]);
 
     const clearCart = useCallback(() => {
-        setItems([]);
+        let hadItems = false;
+
+        setItems(currentItems => {
+            hadItems = currentItems.length > 0;
+            return [];
+        });
+
+        // Show toast after state update
+        setTimeout(() => {
+            if (hadItems) {
+                toast.success('Coșul a fost golit', { icon: '🧹' });
+            }
+        }, 0);
     }, []);
 
     const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);

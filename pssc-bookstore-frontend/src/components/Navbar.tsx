@@ -41,6 +41,12 @@ export function Navbar() {
                                 Toate Cărțile
                             </Link>
                             <Link
+                                href="/cart"
+                                className="text-gray-600 dark:text-gray-300 hover:text-[#d4849a] dark:hover:text-pink-300 font-medium transition-colors"
+                            >
+                                Coș
+                            </Link>
+                            <Link
                                 href="/orders"
                                 className="text-gray-600 dark:text-gray-300 hover:text-[#d4849a] dark:hover:text-pink-300 font-medium transition-colors"
                             >
@@ -62,9 +68,9 @@ export function Navbar() {
                             {/* Theme Toggle */}
                             <ThemeToggle />
 
-                            {/* Cart Button */}
-                            <button
-                                onClick={openCart}
+                            {/* Cart Button - Links to cart page, or opens drawer on right-click */}
+                            <Link
+                                href="/cart"
                                 className="relative flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#fce4ec] to-[#f3c9d5] dark:from-gray-700 dark:to-gray-600 text-[#6b4a5a] dark:text-white rounded-full hover:shadow-lg hover:scale-105 transition-all"
                             >
                                 <ShoppingCart className="w-5 h-5" />
@@ -76,7 +82,7 @@ export function Navbar() {
                                         {totalItems}
                                     </span>
                                 )}
-                            </button>
+                            </Link>
 
                             {/* Mobile menu button */}
                             <button
@@ -110,6 +116,13 @@ export function Navbar() {
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
                             Toate Cărțile
+                        </Link>
+                        <Link
+                            href="/cart"
+                            className="block px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 rounded-lg transition-colors"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                            Coș
                         </Link>
                         <Link
                             href="/orders"
