@@ -6,6 +6,7 @@ import { useCart } from '@/context/CartContext';
 import { ShoppingCart, BookOpen, Search, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './ThemeToggle';
+import { AuthButton } from './AuthButton';
 
 export function Navbar() {
     const { totalItems, totalPrice, openCart } = useCart();
@@ -67,6 +68,9 @@ export function Navbar() {
 
                             {/* Theme Toggle */}
                             <ThemeToggle />
+
+                            {/* Auth Button */}
+                            <AuthButton />
 
                             {/* Cart Button - Links to cart page, or opens drawer on right-click */}
                             <Link

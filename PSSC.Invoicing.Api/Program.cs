@@ -8,6 +8,7 @@ using PSSC.Invoicing.Api.Domain.Workflows;
 using PSSC.Invoicing.Api.Infrastructure.Messaging;
 using PSSC.Invoicing.Api.Infrastructure.Email;
 using PSSC.Invoicing.Api.Infrastructure.Persistence;
+using PSSC.Common.Auth.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,9 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "PSSC Invoicing API", Version = "v1" });
 });
+
+// Azure AD Authentication
+builder.Services.AddAzureAdAuthentication(builder.Configuration);
 
 // Database Context
 builder.Services.AddDbContext<InvoicingDbContext>(options =>
@@ -48,8 +52,8 @@ builder.Services.AddScoped<IPublishInvoiceOperation>(sp =>
 // Email Service - use Azure if properly configured, otherwise Development fallback
 var acsConnectionString = builder.Configuration["AzureCommunicationServices:ConnectionString"];
 var senderEmail = builder.Configuration["AzureCommunicationServices:SenderEmail"];
-var isEmailConfigured = !string.IsNullOrEmpty(acsConnectionString) 
-    && !string.IsNullOrEmpty(senderEmail) 
+var isEmailConfigured = !string.IsNullOrEmpty(acsConnectionString)
+    && !string.IsNullOrEmpty(senderEmail)
     && !senderEmail.Contains("UPDATE_WITH");
 
 if (isEmailConfigured)
@@ -86,7 +90,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:3000", "https://localhost:3000")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -126,6 +131,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors();
+
+// Add authentication & authorization middleware
+app.UseAzureAdAuthentication();
+
+// Map authentication endpoints
+app.MapAuthEndpoints();
 
 // === API Endpoints ===
 
@@ -333,7 +344,7 @@ app.MapGet("/api/invoices", async (
 {
     var invoices = await repository.GetAllAsync(skip, take, ct);
     var total = await repository.GetTotalCountAsync(ct);
-    
+
     return Results.Ok(new
     {
         Total = total,
@@ -353,10 +364,10 @@ app.MapGet("/api/invoices/{invoiceNumber}", async (
     CancellationToken ct) =>
 {
     var invoice = await repository.GetByInvoiceNumberAsync(invoiceNumber, ct);
-    
+
     if (invoice == null)
         return Results.NotFound(new { Error = $"Invoice {invoiceNumber} not found" });
-    
+
     return Results.Ok(MapToInvoiceDto(invoice));
 })
 .WithName("GetInvoiceByNumber")
@@ -370,10 +381,10 @@ app.MapGet("/api/invoices/by-order/{orderId:guid}", async (
     CancellationToken ct) =>
 {
     var invoice = await repository.GetByOrderIdAsync(orderId, ct);
-    
+
     if (invoice == null)
         return Results.NotFound(new { Error = $"Invoice for order {orderId} not found" });
-    
+
     return Results.Ok(MapToInvoiceDto(invoice));
 })
 .WithName("GetInvoiceByOrderId")
@@ -404,7 +415,7 @@ app.MapGet("/api/invoices/stats", async (
     var totalVat = invoices.Sum(i => i.VatAmount);
     var companiesCount = invoices.Count(i => i.IsCompany);
     var individualsCount = invoices.Count(i => !i.IsCompany);
-    
+
     return Results.Ok(new
     {
         TotalInvoices = total,

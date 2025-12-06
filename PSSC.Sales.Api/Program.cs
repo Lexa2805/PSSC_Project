@@ -6,6 +6,7 @@ using PSSC.Sales.Api.Domain.Workflows;
 using PSSC.Sales.Api.Infrastructure.Messaging;
 using PSSC.Sales.Api.Infrastructure.Persistence;
 using PSSC.Sales.Api.Infrastructure.Persistence.Repositories;
+using PSSC.Common.Auth.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,9 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "PSSC Sales API", Version = "v1" });
 });
+
+// Azure AD Authentication
+builder.Services.AddAzureAdAuthentication(builder.Configuration);
 
 // Database
 builder.Services.AddDbContext<SalesDbContext>(options =>
@@ -50,7 +54,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:3000", "https://localhost:3000")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -65,6 +70,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors();
+
+// Add authentication & authorization middleware
+app.UseAzureAdAuthentication();
+
+// Map authentication endpoints
+app.MapAuthEndpoints();
 
 // === API Endpoints ===
 

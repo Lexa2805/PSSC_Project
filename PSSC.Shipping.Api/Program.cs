@@ -6,6 +6,7 @@ using PSSC.Shipping.Api.Domain.ValueObjects;
 using PSSC.Shipping.Api.Domain.Workflows;
 using PSSC.Shipping.Api.Infrastructure.Messaging;
 using PSSC.Shipping.Api.Infrastructure.Persistence;
+using PSSC.Common.Auth.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,9 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "PSSC Shipping API", Version = "v1" });
 });
+
+// Azure AD Authentication
+builder.Services.AddAzureAdAuthentication(builder.Configuration);
 
 // Database Context
 builder.Services.AddDbContext<ShippingDbContext>(options =>
@@ -62,7 +66,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:3000", "https://localhost:3000")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -102,6 +107,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors();
+
+// Add authentication & authorization middleware
+app.UseAzureAdAuthentication();
+
+// Map authentication endpoints
+app.MapAuthEndpoints();
 
 // === API Endpoints ===
 
@@ -328,7 +339,7 @@ app.MapPost("/api/shipping/calculate", (CalculateShippingRequest request) =>
 {
     var carrier = Carrier.GetByCode(request.CarrierCode) ?? Carrier.GetDefault();
     var weight = request.TotalWeight > 0 ? request.TotalWeight : 0.5m;
-    
+
     // Calculate cost: base + weight-based
     var baseCost = carrier.BaseCost;
     var weightCost = weight > 1 ? (weight - 1) * 3 : 0;

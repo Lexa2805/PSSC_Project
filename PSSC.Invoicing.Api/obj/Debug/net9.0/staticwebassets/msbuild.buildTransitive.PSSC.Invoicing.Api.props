@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\buildMultiTargeting\PSSC.Invoicing.Api.props" />
+</Project>

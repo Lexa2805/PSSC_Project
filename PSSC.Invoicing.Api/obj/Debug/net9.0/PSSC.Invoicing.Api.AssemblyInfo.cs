@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PSSC.Invoicing.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d5e1a20d407cbb210c90224958f1ff5ff3854d30")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+55ba20c15ac175fe21b9578aed309e0127ab2019")]
 [assembly: System.Reflection.AssemblyProductAttribute("PSSC.Invoicing.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PSSC.Invoicing.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

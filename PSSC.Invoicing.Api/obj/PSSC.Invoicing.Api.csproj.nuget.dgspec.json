@@ -10,14 +10,14 @@
         "projectUniqueName": "D:\\PSSC_Project\\PSSC.Common\\PSSC.Common.csproj",
         "projectName": "PSSC.Common",
         "projectPath": "D:\\PSSC_Project\\PSSC.Common\\PSSC.Common.csproj",
-        "packagesPath": "C:\\Users\\Roberta Chiton\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\Lexa\\.nuget\\packages\\",
         "outputPath": "D:\\PSSC_Project\\PSSC.Common\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Roberta Chiton\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Lexa\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -42,9 +42,9 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "direct"
+          "auditMode": "all"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net9.0": {
@@ -54,9 +54,17 @@
               "target": "Package",
               "version": "[7.20.1, )"
             },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
             "Microsoft.Extensions.Azure": {
               "target": "Package",
               "version": "[1.13.1, )"
+            },
+            "Microsoft.Identity.Web": {
+              "target": "Package",
+              "version": "[3.2.2, )"
             },
             "System.Data.SqlClient": {
               "target": "Package",
@@ -75,11 +83,14 @@
           "assetTargetFallback": true,
           "warn": true,
           "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.308/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200-preview.0.24575.35/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
@@ -89,14 +100,14 @@
         "projectUniqueName": "D:\\PSSC_Project\\PSSC.Invoicing.Api\\PSSC.Invoicing.Api.csproj",
         "projectName": "PSSC.Invoicing.Api",
         "projectPath": "D:\\PSSC_Project\\PSSC.Invoicing.Api\\PSSC.Invoicing.Api.csproj",
-        "packagesPath": "C:\\Users\\Roberta Chiton\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\Lexa\\.nuget\\packages\\",
         "outputPath": "D:\\PSSC_Project\\PSSC.Invoicing.Api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Roberta Chiton\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Lexa\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -125,9 +136,9 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "direct"
+          "auditMode": "all"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net9.0": {
@@ -185,7 +196,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.308/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200-preview.0.24575.35/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
