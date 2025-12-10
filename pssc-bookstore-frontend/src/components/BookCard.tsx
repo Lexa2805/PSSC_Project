@@ -4,7 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Product } from '@/types';
 import { useCart } from '@/context/CartContext';
-import { ShoppingCart, BookOpen, Star } from 'lucide-react';
+import { useFavorites } from '@/context/FavoritesContext';
+import { ShoppingCart, BookOpen, Star, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getBookImage } from '@/lib/bookImages';
 
@@ -25,10 +26,12 @@ const categoryColors: Record<string, { bg: string; accent: string }> = {
 
 export function BookCard({ product }: BookCardProps) {
     const { addToCart, items } = useCart();
+    const { isFavorite, toggleFavorite } = useFavorites();
     const cartItem = items.find(item => item.code === product.code);
     const quantityInCart = cartItem?.quantity || 0;
     const isOutOfStock = product.stockQuantity === 0;
     const canAddMore = quantityInCart < product.stockQuantity;
+    const isProductFavorite = isFavorite(product.code);
 
     const colors = categoryColors[product.category] || { bg: 'from-gray-600 to-gray-800', accent: 'bg-gray-400' };
     const bookImage = getBookImage(product.code);
@@ -37,6 +40,12 @@ export function BookCard({ product }: BookCardProps) {
         e.preventDefault();
         e.stopPropagation();
         addToCart(product);
+    };
+
+    const handleToggleFavorite = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleFavorite(product);
     };
 
     return (
@@ -79,13 +88,26 @@ export function BookCard({ product }: BookCardProps) {
                     {product.category}
                 </div>
 
+                {/* Favorite button */}
+                <button
+                    onClick={handleToggleFavorite}
+                    className={cn(
+                        "absolute top-4 right-4 p-2 rounded-full transition-all z-10",
+                        isProductFavorite
+                            ? "bg-red-500 text-white"
+                            : "bg-white/80 text-gray-600 hover:bg-white hover:text-red-500"
+                    )}
+                >
+                    <Heart className={cn("w-4 h-4", isProductFavorite && "fill-current")} />
+                </button>
+
                 {/* Stock badge */}
                 {isOutOfStock ? (
-                    <div className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                    <div className="absolute bottom-4 right-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
                         Stoc Epuizat
                     </div>
                 ) : product.stockQuantity < 10 ? (
-                    <div className="absolute top-4 right-4 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                    <div className="absolute bottom-4 right-4 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full">
                         Doar {product.stockQuantity} rămase
                     </div>
                 ) : null}

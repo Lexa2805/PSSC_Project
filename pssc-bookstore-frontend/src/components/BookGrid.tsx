@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Product } from '@/types';
 import { BookCard } from './BookCard';
 import { getProducts } from '@/lib/api';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 interface BookGridProps {
     products?: Product[];
@@ -14,19 +15,24 @@ interface BookGridProps {
 export function BookGrid({ products: propProducts, title = "Featured Books", subtitle = "Discover our curated selection of programming and software engineering books" }: BookGridProps) {
     const [products, setProducts] = useState<Product[]>(propProducts || []);
     const [loading, setLoading] = useState(!propProducts);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchProducts = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await getProducts();
+            setProducts(data);
+        } catch (err) {
+            console.error('Failed to fetch products:', err);
+            setError('Nu s-a putut conecta la server. Verifică dacă backend-ul rulează.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (!propProducts) {
-            const fetchProducts = async () => {
-                try {
-                    const data = await getProducts();
-                    setProducts(data);
-                } catch (error) {
-                    console.error('Failed to fetch products:', error);
-                } finally {
-                    setLoading(false);
-                }
-            };
             fetchProducts();
         }
     }, [propProducts]);
@@ -77,9 +83,25 @@ export function BookGrid({ products: propProducts, title = "Featured Books", sub
                     ))}
                 </div>
 
-                {products.length === 0 && !loading && (
+                {products.length === 0 && !loading && !error && (
                     <div className="text-center py-12">
                         <p className="text-gray-500 dark:text-gray-400 text-lg">No books available at the moment.</p>
+                    </div>
+                )}
+
+                {error && (
+                    <div className="text-center py-12">
+                        <div className="inline-flex flex-col items-center gap-4 p-6 bg-red-50 dark:bg-red-900/20 rounded-2xl">
+                            <AlertCircle className="w-12 h-12 text-red-500" />
+                            <p className="text-red-600 dark:text-red-400 text-lg font-medium">{error}</p>
+                            <button
+                                onClick={fetchProducts}
+                                className="flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
+                            >
+                                <RefreshCw className="w-4 h-4" />
+                                Încearcă din nou
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

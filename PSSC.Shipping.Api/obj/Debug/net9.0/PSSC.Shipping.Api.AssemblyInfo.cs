@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PSSC.Shipping.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+55ba20c15ac175fe21b9578aed309e0127ab2019")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d7212e4c0dbf6617849d7e385800732cfab880eb")]
 [assembly: System.Reflection.AssemblyProductAttribute("PSSC.Shipping.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PSSC.Shipping.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

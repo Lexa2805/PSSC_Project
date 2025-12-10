@@ -3,13 +3,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
-import { ShoppingCart, BookOpen, Search, Menu, X } from 'lucide-react';
+import { useFavorites } from '@/context/FavoritesContext';
+import { ShoppingCart, BookOpen, Search, Menu, X, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './ThemeToggle';
 import { AuthButton } from './AuthButton';
 
 export function Navbar() {
     const { totalItems, totalPrice, openCart } = useCart();
+    const { favorites } = useFavorites();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
@@ -68,6 +70,19 @@ export function Navbar() {
 
                             {/* Theme Toggle */}
                             <ThemeToggle />
+
+                            {/* Favorites Button */}
+                            <Link
+                                href="/orders?tab=favorites"
+                                className="relative p-2 bg-[#fce4ec] dark:bg-gray-800 rounded-full text-[#6b4a5a] dark:text-gray-300 hover:bg-[#f8d7e0] dark:hover:bg-gray-700 transition-colors"
+                            >
+                                <Heart className={cn("w-5 h-5", favorites.length > 0 && "fill-red-400 text-red-400")} />
+                                {favorites.length > 0 && (
+                                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                                        {favorites.length}
+                                    </span>
+                                )}
+                            </Link>
 
                             {/* Auth Button */}
                             <AuthButton />
