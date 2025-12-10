@@ -115,6 +115,9 @@ export default function CartPage() {
             const newCustomerId = "customer-web-" + Date.now();
             setCustomerId(newCustomerId);
             
+            // Save customer ID to localStorage for orders page
+            localStorage.setItem('lastCustomerId', newCustomerId);
+            
             const orderData = await placeOrder(
                 newCustomerId,
                 items.map((item) => ({

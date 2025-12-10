@@ -2833,7 +2833,7 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Lexa\\.nuget\\packages\\": {},
+    "C:\\Users\\Roberta Chiton\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
@@ -2842,14 +2842,14 @@
       "projectUniqueName": "D:\\PSSC_Project\\PSSC.Common\\PSSC.Common.csproj",
       "projectName": "PSSC.Common",
       "projectPath": "D:\\PSSC_Project\\PSSC.Common\\PSSC.Common.csproj",
-      "packagesPath": "C:\\Users\\Lexa\\.nuget\\packages\\",
+      "packagesPath": "C:\\Users\\Roberta Chiton\\.nuget\\packages\\",
       "outputPath": "D:\\PSSC_Project\\PSSC.Common\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Lexa\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Roberta Chiton\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -2874,9 +2874,9 @@
       "restoreAuditProperties": {
         "enableAudit": "true",
         "auditLevel": "low",
-        "auditMode": "all"
+        "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.200"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net9.0": {
@@ -2922,31 +2922,11 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200-preview.0.24575.35/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.308/PortableRuntimeIdentifierGraph.json"
       }
     }
   },
   "logs": [
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Package 'Microsoft.Extensions.Caching.Memory' 9.0.0-rc.1.24431.7 has a known high severity vulnerability, https://github.com/advisories/GHSA-qj66-m88j-hmgj",
-      "libraryId": "Microsoft.Extensions.Caching.Memory",
-      "targetGraphs": [
-        "net9.0"
-      ]
-    },
-    {
-      "code": "NU1902",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Package 'Microsoft.Identity.Abstractions' 7.1.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-rpq8-q44m-2rpg",
-      "libraryId": "Microsoft.Identity.Abstractions",
-      "targetGraphs": [
-        "net9.0"
-      ]
-    },
     {
       "code": "NU1902",
       "level": "Warning",

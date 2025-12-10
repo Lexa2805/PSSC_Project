@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\PSSC.Shipping.Api.props" />
-</Project>

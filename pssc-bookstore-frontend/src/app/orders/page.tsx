@@ -41,22 +41,14 @@ export default function OrdersPage() {
 
             setLoading(true);
             try {
-                // Try with user email or ID as customer ID
-                const customerId = user.email || user.id;
+                // Try with localStorage customer ID first (most recent orders)
+                const storedCustomerId = localStorage.getItem('lastCustomerId');
+                const customerId = storedCustomerId || user.email || user.id;
                 const data = await getCustomerOrders(customerId);
                 setOrders(data);
             } catch (error) {
                 console.error("Failed to fetch orders:", error);
-                // Try alternative: load from localStorage
-                try {
-                    const storedCustomerId = localStorage.getItem('lastCustomerId');
-                    if (storedCustomerId) {
-                        const data = await getCustomerOrders(storedCustomerId);
-                        setOrders(data);
-                    }
-                } catch {
-                    setOrders([]);
-                }
+                setOrders([]);
             } finally {
                 setLoading(false);
             }

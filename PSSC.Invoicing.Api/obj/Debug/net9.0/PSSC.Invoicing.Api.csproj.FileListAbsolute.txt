@@ -163,12 +163,6 @@ D:\PSSC_Project\PSSC.Invoicing.Api\bin\Debug\net9.0\runtimes\win\lib\net6.0\Syst
 D:\PSSC_Project\PSSC.Invoicing.Api\bin\Debug\net9.0\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll
 D:\PSSC_Project\PSSC.Invoicing.Api\bin\Debug\net9.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
 D:\PSSC_Project\PSSC.Invoicing.Api\bin\Debug\net9.0\Azure.Communication.Email.dll
-D:\PSSC_Project\PSSC.Invoicing.Api\obj\Debug\net9.0\staticwebassets\msbuild.PSSC.Invoicing.Api.Microsoft.AspNetCore.StaticWebAssets.props
-D:\PSSC_Project\PSSC.Invoicing.Api\obj\Debug\net9.0\staticwebassets\msbuild.PSSC.Invoicing.Api.Microsoft.AspNetCore.StaticWebAssetEndpoints.props
-D:\PSSC_Project\PSSC.Invoicing.Api\obj\Debug\net9.0\staticwebassets\msbuild.build.PSSC.Invoicing.Api.props
-D:\PSSC_Project\PSSC.Invoicing.Api\obj\Debug\net9.0\staticwebassets\msbuild.buildMultiTargeting.PSSC.Invoicing.Api.props
-D:\PSSC_Project\PSSC.Invoicing.Api\obj\Debug\net9.0\staticwebassets\msbuild.buildTransitive.PSSC.Invoicing.Api.props
-D:\PSSC_Project\PSSC.Invoicing.Api\obj\Debug\net9.0\staticwebassets.pack.json
 D:\PSSC_Project\PSSC.Invoicing.Api\bin\Debug\net9.0\Azure.Security.KeyVault.Certificates.dll
 D:\PSSC_Project\PSSC.Invoicing.Api\bin\Debug\net9.0\Azure.Security.KeyVault.Secrets.dll
 D:\PSSC_Project\PSSC.Invoicing.Api\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
@@ -183,3 +177,8 @@ D:\PSSC_Project\PSSC.Invoicing.Api\bin\Debug\net9.0\Microsoft.Identity.Web.Token
 D:\PSSC_Project\PSSC.Invoicing.Api\bin\Debug\net9.0\Microsoft.Identity.Web.TokenCache.dll
 D:\PSSC_Project\PSSC.Invoicing.Api\bin\Debug\net9.0\Microsoft.IdentityModel.LoggingExtensions.dll
 D:\PSSC_Project\PSSC.Invoicing.Api\bin\Debug\net9.0\Microsoft.IdentityModel.Validators.dll
+D:\PSSC_Project\PSSC.Invoicing.Api\obj\Debug\net9.0\rpswa.dswa.cache.json
+D:\PSSC_Project\PSSC.Invoicing.Api\obj\Debug\net9.0\rjimswa.dswa.cache.json
+D:\PSSC_Project\PSSC.Invoicing.Api\obj\Debug\net9.0\rjsmrazor.dswa.cache.json
+D:\PSSC_Project\PSSC.Invoicing.Api\obj\Debug\net9.0\rjsmcshtml.dswa.cache.json
+D:\PSSC_Project\PSSC.Invoicing.Api\obj\Debug\net9.0\staticwebassets.build.json.cache

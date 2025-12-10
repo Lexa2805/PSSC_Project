@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\PSSC.Invoicing.Api.props" />
-</Project>

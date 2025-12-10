@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PSSC.Sales.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d7212e4c0dbf6617849d7e385800732cfab880eb")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fb172c8db656a367a9d836ab6bea9e1a4c234663")]
 [assembly: System.Reflection.AssemblyProductAttribute("PSSC.Sales.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PSSC.Sales.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
