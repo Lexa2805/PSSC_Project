@@ -46,23 +46,41 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     }, [favorites, isLoaded]);
 
     const addToFavorites = useCallback((product: Product) => {
+        let wasAdded = false;
+
         setFavorites(current => {
             if (current.some(p => p.code === product.code)) {
                 return current;
             }
-            toast.success(`"${product.name}" adăugat la favorite`, { icon: '❤️' });
+            wasAdded = true;
             return [...current, product];
         });
+
+        // Show toast after state update
+        if (wasAdded) {
+            setTimeout(() => {
+                toast.success(`"${product.name}" adăugat la favorite`, { icon: '❤️' });
+            }, 0);
+        }
     }, []);
 
     const removeFromFavorites = useCallback((productCode: string) => {
+        let productName: string | null = null;
+
         setFavorites(current => {
             const product = current.find(p => p.code === productCode);
             if (product) {
-                toast.success(`"${product.name}" eliminat din favorite`, { icon: '💔' });
+                productName = product.name;
             }
             return current.filter(p => p.code !== productCode);
         });
+
+        // Show toast after state update
+        if (productName) {
+            setTimeout(() => {
+                toast.success(`"${productName}" eliminat din favorite`, { icon: '💔' });
+            }, 0);
+        }
     }, []);
 
     const isFavorite = useCallback((productCode: string) => {

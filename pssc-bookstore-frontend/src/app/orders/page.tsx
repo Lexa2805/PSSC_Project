@@ -8,6 +8,7 @@ import { Order, InvoiceDto, ShipmentResponse } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useCart } from "@/context/CartContext";
+import { getBookImage } from "@/lib/bookImages";
 import { Heart, ShoppingCart, Package, FileText, Truck, ChevronDown, ChevronUp, Clock, CheckCircle, AlertCircle } from "lucide-react";
 
 export default function OrdersPage() {
@@ -41,9 +42,8 @@ export default function OrdersPage() {
 
             setLoading(true);
             try {
-                // Try with localStorage customer ID first (most recent orders)
-                const storedCustomerId = localStorage.getItem('lastCustomerId');
-                const customerId = storedCustomerId || user.email || user.id;
+                // Use authenticated user's email/id as customer ID to get all their orders
+                const customerId = user.email || user.id;
                 const data = await getCustomerOrders(customerId);
                 setOrders(data);
             } catch (error) {
@@ -391,50 +391,73 @@ export default function OrdersPage() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {favorites.map((product) => (
-                                    <div
-                                        key={product.code}
-                                        className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-                                    >
-                                        <div className="aspect-[3/4] bg-gradient-to-br from-[#f3c9d5] to-[#e8b4c4] dark:from-gray-700 dark:to-gray-600 flex items-center justify-center relative">
-                                            <svg className="w-16 h-16 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                                            </svg>
-                                            <button
-                                                onClick={() => removeFromFavorites(product.code)}
-                                                className="absolute top-3 right-3 p-2 bg-white/90 dark:bg-gray-800/90 rounded-full text-red-500 hover:bg-white dark:hover:bg-gray-800 transition-colors"
-                                            >
-                                                <Heart className="w-5 h-5 fill-current" />
-                                            </button>
-                                        </div>
-                                        <div className="p-4">
-                                            <span className="text-xs font-medium text-[#d4849a] dark:text-pink-400 uppercase tracking-wider">
-                                                {product.category}
-                                            </span>
-                                            <h3 className="font-semibold text-gray-900 dark:text-white mt-1 line-clamp-2">
-                                                {product.name}
-                                            </h3>
-                                            {product.author && (
-                                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                                    {product.author}
-                                                </p>
-                                            )}
-                                            <div className="flex items-center justify-between mt-4">
-                                                <span className="text-lg font-bold text-gray-900 dark:text-white">
-                                                    {product.price.toFixed(2)} lei
-                                                </span>
+                                {favorites.map((product) => {
+                                    const bookImage = getBookImage(product.code);
+                                    return (
+                                        <Link
+                                            key={product.code}
+                                            href={`/books/${product.code}`}
+                                            className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-all group block"
+                                        >
+                                            <div className="aspect-[3/4] bg-gradient-to-br from-[#f3c9d5] to-[#e8b4c4] dark:from-gray-700 dark:to-gray-600 flex items-center justify-center relative overflow-hidden">
+                                                {bookImage ? (
+                                                    <img
+                                                        src={bookImage}
+                                                        alt={product.name}
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                        onError={(e) => {
+                                                            e.currentTarget.style.display = 'none';
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <svg className="w-16 h-16 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                                    </svg>
+                                                )}
                                                 <button
-                                                    onClick={() => addToCart(product)}
-                                                    disabled={product.stockQuantity === 0}
-                                                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#f3c9d5] to-[#e8b4c4] dark:from-gray-600 dark:to-gray-500 text-gray-800 dark:text-white text-sm font-medium rounded-lg hover:from-[#e8b4c4] hover:to-[#d4849a] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        removeFromFavorites(product.code);
+                                                    }}
+                                                    className="absolute top-3 right-3 p-2 bg-white/90 dark:bg-gray-800/90 rounded-full text-red-500 hover:bg-white dark:hover:bg-gray-800 transition-colors z-10"
                                                 >
-                                                    <ShoppingCart className="w-4 h-4" />
-                                                    Adaugă
+                                                    <Heart className="w-5 h-5 fill-current" />
                                                 </button>
                                             </div>
-                                        </div>
-                                    </div>
-                                ))}
+                                            <div className="p-4">
+                                                <span className="text-xs font-medium text-[#d4849a] dark:text-pink-400 uppercase tracking-wider">
+                                                    {product.category}
+                                                </span>
+                                                <h3 className="font-semibold text-gray-900 dark:text-white mt-1 line-clamp-2">
+                                                    {product.name}
+                                                </h3>
+                                                {product.author && (
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                                        {product.author}
+                                                    </p>
+                                                )}
+                                                <div className="flex items-center justify-between mt-4">
+                                                    <span className="text-lg font-bold text-gray-900 dark:text-white">
+                                                        {product.price.toFixed(2)} lei
+                                                    </span>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            addToCart(product);
+                                                        }}
+                                                        disabled={product.stockQuantity === 0}
+                                                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#f3c9d5] to-[#e8b4c4] dark:from-gray-600 dark:to-gray-500 text-gray-800 dark:text-white text-sm font-medium rounded-lg hover:from-[#e8b4c4] hover:to-[#d4849a] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        <ShoppingCart className="w-4 h-4" />
+                                                        Adaugă
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

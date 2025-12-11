@@ -265,6 +265,8 @@ export interface CalculateShippingResponse {
 
 // Shipping form data (for checkout)
 export interface ShippingFormData {
+    contactName: string;
+    contactEmail: string;
     city: string;
     street: string;
     zipCode: string;

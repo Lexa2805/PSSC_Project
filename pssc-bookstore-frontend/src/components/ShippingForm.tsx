@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ShippingFormData, Carrier, ValidateAddressResponse, CalculateShippingResponse } from '@/types';
 import { getCarriers, validateDeliveryAddress, calculateShipping } from '@/lib/api';
-import { MapPin, Phone, Truck, CheckCircle, AlertCircle, Loader2, Building2, Package } from 'lucide-react';
+import { MapPin, Phone, Truck, CheckCircle, AlertCircle, Loader2, Building2, Package, User, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ShippingFormProps {
@@ -15,6 +15,8 @@ interface ShippingFormProps {
 
 export function ShippingForm({ onSubmit, onBack, isSubmitting, totalWeight = 1 }: ShippingFormProps) {
     const [formData, setFormData] = useState<ShippingFormData>({
+        contactName: '',
+        contactEmail: '',
         city: '',
         street: '',
         zipCode: '',
@@ -137,6 +139,44 @@ export function ShippingForm({ onSubmit, onBack, isSubmitting, totalWeight = 1 }
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                     Completează datele pentru livrarea comenzii
                 </p>
+            </div>
+
+            {/* Contact Name */}
+            <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    Nume și Prenume *
+                </label>
+                <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                        type="text"
+                        name="contactName"
+                        value={formData.contactName}
+                        onChange={handleChange}
+                        placeholder="ex: Ion Popescu"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#f8d7e0] dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#f3c9d5] dark:focus:ring-gray-500 focus:border-transparent"
+                        required
+                    />
+                </div>
+            </div>
+
+            {/* Contact Email */}
+            <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    Email *
+                </label>
+                <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                        type="email"
+                        name="contactEmail"
+                        value={formData.contactEmail}
+                        onChange={handleChange}
+                        placeholder="exemplu@email.com"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#f8d7e0] dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#f3c9d5] dark:focus:ring-gray-500 focus:border-transparent"
+                        required
+                    />
+                </div>
             </div>
 
             {/* Street */}

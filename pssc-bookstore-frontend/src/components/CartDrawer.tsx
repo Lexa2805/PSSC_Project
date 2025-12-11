@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { placeOrder, generateInvoice, shipOrder } from '@/lib/api';
 import { PlaceOrderResponse, GenerateInvoiceResponse, CheckoutFormData, ShippingFormData, ShipmentResponse, FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from '@/types';
 import { getBookImage } from '@/lib/bookImages';
@@ -31,6 +32,7 @@ type CheckoutStep = 'cart' | 'shipping' | 'billing' | 'success';
 
 export function CartDrawer() {
     const { items, removeFromCart, updateQuantity, clearCart, totalPrice, totalItems, isCartOpen, closeCart } = useCart();
+    const { user } = useAuth();
     const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>('cart');
     const [isCheckingOut, setIsCheckingOut] = useState(false);
     const [orderResult, setOrderResult] = useState<PlaceOrderResponse | null>(null);
@@ -68,11 +70,8 @@ export function CartDrawer() {
 
         try {
             // Step 1: Place the order
-            const newCustomerId = 'customer-web-' + Date.now();
+            const newCustomerId = user?.email || user?.id || 'customer-web-' + Date.now();
             setCustomerId(newCustomerId);
-            
-            // Save customer ID to localStorage for orders page
-            localStorage.setItem('lastCustomerId', newCustomerId);
             
             const orderData = await placeOrder(
                 newCustomerId,

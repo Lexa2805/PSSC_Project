@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckoutFormData, ValidateFiscalCodeResponse } from '@/types';
+import { CheckoutFormData, ValidateFiscalCodeResponse, ShippingFormData } from '@/types';
 import { validateFiscalCode } from '@/lib/api';
 import { User, Building2, MapPin, Mail, CheckCircle, AlertCircle, Loader2, UserCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -10,9 +10,11 @@ interface CheckoutFormProps {
     onSubmit: (data: CheckoutFormData) => void;
     onBack: () => void;
     isSubmitting: boolean;
+    shippingData?: ShippingFormData | null;
 }
 
-export function CheckoutForm({ onSubmit, onBack, isSubmitting }: CheckoutFormProps) {
+export function CheckoutForm({ onSubmit, onBack, isSubmitting, shippingData }: CheckoutFormProps) {
+    const [useSameAddress, setUseSameAddress] = useState(false);
     const [formData, setFormData] = useState<CheckoutFormData>({
         clientName: '',
         fiscalCode: '',
@@ -24,6 +26,30 @@ export function CheckoutForm({ onSubmit, onBack, isSubmitting }: CheckoutFormPro
     const [fiscalCodeValidation, setFiscalCodeValidation] = useState<ValidateFiscalCodeResponse | null>(null);
     const [isValidatingFiscalCode, setIsValidatingFiscalCode] = useState(false);
     const [fiscalCodeTouched, setFiscalCodeTouched] = useState(false);
+
+    // Update billing address when "same as shipping" is toggled
+    useEffect(() => {
+        if (useSameAddress && shippingData) {
+            const shippingAddress = `${shippingData.street}, ${shippingData.city}, ${shippingData.zipCode}`;
+            setFormData(prev => ({ 
+                ...prev, 
+                billingAddress: shippingAddress,
+                clientName: shippingData.contactName || prev.clientName,
+                email: shippingData.contactEmail || prev.email,
+            }));
+        } else if (!useSameAddress && shippingData) {
+            // Clear billing address when unchecking if it matches shipping
+            const shippingAddress = `${shippingData.street}, ${shippingData.city}, ${shippingData.zipCode}`;
+            if (formData.billingAddress === shippingAddress) {
+                setFormData(prev => ({ 
+                    ...prev, 
+                    billingAddress: '',
+                    clientName: '',
+                    email: '',
+                }));
+            }
+        }
+    }, [useSameAddress, shippingData]);
 
     // Debounced fiscal code validation (only when isCompany is true)
     useEffect(() => {
@@ -156,7 +182,13 @@ export function CheckoutForm({ onSubmit, onBack, isSubmitting }: CheckoutFormPro
                         value={formData.clientName}
                         onChange={handleChange}
                         placeholder={formData.isCompany ? "ex: SC Exemplu SRL" : "ex: Ion Popescu"}
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#f8d7e0] dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#f3c9d5] dark:focus:ring-gray-500 focus:border-transparent"
+                        disabled={useSameAddress && !formData.isCompany}
+                        className={cn(
+                            "w-full pl-10 pr-4 py-3 rounded-xl border bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:border-transparent",
+                            useSameAddress && !formData.isCompany
+                                ? "border-[#f8d7e0] dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed focus:ring-[#f3c9d5] dark:focus:ring-gray-500"
+                                : "border-[#f8d7e0] dark:border-gray-600 focus:ring-[#f3c9d5] dark:focus:ring-gray-500"
+                        )}
                         required
                     />
                 </div>
@@ -235,11 +267,14 @@ export function CheckoutForm({ onSubmit, onBack, isSubmitting }: CheckoutFormPro
                         value={formData.email}
                         onChange={handleChange}
                         placeholder="exemplu@email.com"
+                        disabled={useSameAddress}
                         className={cn(
                             "w-full pl-10 pr-4 py-3 rounded-xl border bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:border-transparent",
-                            formData.email && !isEmailValid
-                                ? "border-red-400 focus:ring-red-300"
-                                : "border-[#f8d7e0] dark:border-gray-600 focus:ring-[#f3c9d5] dark:focus:ring-gray-500"
+                            useSameAddress
+                                ? "border-[#f8d7e0] dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed focus:ring-[#f3c9d5] dark:focus:ring-gray-500"
+                                : formData.email && !isEmailValid
+                                    ? "border-red-400 focus:ring-red-300"
+                                    : "border-[#f8d7e0] dark:border-gray-600 focus:ring-[#f3c9d5] dark:focus:ring-gray-500"
                         )}
                         required
                     />
@@ -260,6 +295,27 @@ export function CheckoutForm({ onSubmit, onBack, isSubmitting }: CheckoutFormPro
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Adresă Facturare *
                 </label>
+                
+                {/* Same as shipping checkbox */}
+                {shippingData && (
+                    <div className="mb-3">
+                        <label className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-[#f8d7e0] dark:border-gray-600 hover:bg-[#fdf5f7] dark:hover:bg-gray-700/50 transition-colors">
+                            <input
+                                type="checkbox"
+                                checked={useSameAddress}
+                                onChange={(e) => setUseSameAddress(e.target.checked)}
+                                className="w-4 h-4 text-[#d4849a] border-gray-300 rounded focus:ring-[#f3c9d5]"
+                            />
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                                Aceeași adresă ca și cea de livrare
+                            </span>
+                            {useSameAddress && (
+                                <CheckCircle className="w-4 h-4 text-green-500 ml-auto" />
+                            )}
+                        </label>
+                    </div>
+                )}
+                
                 <div className="relative">
                     <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                     <textarea
@@ -268,7 +324,13 @@ export function CheckoutForm({ onSubmit, onBack, isSubmitting }: CheckoutFormPro
                         onChange={handleChange}
                         placeholder="Str. Exemplu nr. 10, București, 010101"
                         rows={2}
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#f8d7e0] dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#f3c9d5] dark:focus:ring-gray-500 focus:border-transparent resize-none"
+                        disabled={useSameAddress}
+                        className={cn(
+                            "w-full pl-10 pr-4 py-3 rounded-xl border bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#f3c9d5] dark:focus:ring-gray-500 focus:border-transparent resize-none",
+                            useSameAddress 
+                                ? "border-[#f8d7e0] dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed"
+                                : "border-[#f8d7e0] dark:border-gray-600"
+                        )}
                         required
                     />
                 </div>

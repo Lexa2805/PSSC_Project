@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { CartItem, Product } from '@/types';
 import toast from 'react-hot-toast';
 
@@ -18,10 +18,37 @@ interface CartContextType {
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
+const CART_STORAGE_KEY = 'bookstore-cart';
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
     const [items, setItems] = useState<CartItem[]>([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [isHydrated, setIsHydrated] = useState(false);
+
+    // Load cart from localStorage on mount
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem(CART_STORAGE_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                setItems(parsed);
+            }
+        } catch (error) {
+            console.error('Failed to load cart from localStorage:', error);
+        }
+        setIsHydrated(true);
+    }, []);
+
+    // Save cart to localStorage whenever it changes
+    useEffect(() => {
+        if (isHydrated) {
+            try {
+                localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+            } catch (error) {
+                console.error('Failed to save cart to localStorage:', error);
+            }
+        }
+    }, [items, isHydrated]);
 
     const openCart = useCallback(() => setIsCartOpen(true), []);
     const closeCart = useCallback(() => setIsCartOpen(false), []);
